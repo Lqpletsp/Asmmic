@@ -1,0 +1,3 @@
+/home/solitude/Projects/DisasmImprov2/build/CMakeFiles/DisasmImprov2.dir
+/home/solitude/Projects/DisasmImprov2/build/CMakeFiles/edit_cache.dir
+/home/solitude/Projects/DisasmImprov2/build/CMakeFiles/rebuild_cache.dir
