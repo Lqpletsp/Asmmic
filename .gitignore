@@ -1,0 +1,16 @@
+#build directories
+build/
+bin/
+out/
+
+# CMake temporary files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# Debug files
+ConvertEnum
+DecodeEnum.cpp
+
