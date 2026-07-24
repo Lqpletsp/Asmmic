@@ -233,8 +233,6 @@ bool IsOperand(TokenTypes type) {
   switch (type) {
   case TokenTypes::IntVal:
   case TokenTypes::DoubleVal:
-  case TokenTypes::CharVal:
-  case TokenTypes::StringVal:
   case TokenTypes::Identifier:
   case TokenTypes::MemoryAddressIndicator:
     return true;
@@ -251,12 +249,11 @@ int Handleclc(const TokenizedLineDT &Line, const int &LPT) {
   for (size_t LinePointer = 0; LinePointer < Line.size(); ++LinePointer) {
     TokenDT token = Line.at(LinePointer);
     TokenTypes type = DetermineType(token.LiteralToken);
-    if (token.LiteralToken == "]")
+    if (token.LiteralToken == "]") {
       InterruptedPtr =
           LinePointer; // stopper stops the execution of the command
-    else if (IsOperand(type)) {
-      if (type == TokenTypes::Identifier) {
-      }
+      break;
+    } else if (IsOperand(type)) {
       outputQueue.push_back(token);
     } else if (IsOperator(type)) {
       while (!operatorStack.empty()) {
@@ -297,7 +294,6 @@ int Handleclc(const TokenizedLineDT &Line, const int &LPT) {
       if (!matched) {
         // Syntax Error: Mismatched parentheses
         ShowError(token, ErrorTypes::GarbageToken);
-        return -1;
       }
     }
     InterruptedPtr = LinePointer;

@@ -78,7 +78,10 @@ struct VariableDT {
 };
 // THIS IS THE MAIN CODE!!!
 inline std::string MAINCODE = R"(
-  out .clc 10 + 10*20; 
+dec .mem 100; 
+dec .var ~d Number; 
+set .clc 10-0.2] : Number; 
+out Number ~n .clc 10-0.8; 
  )";
 inline std::vector<ByteCodeDT> ByteCode;
 

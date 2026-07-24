@@ -173,6 +173,10 @@ void ResolveWriteMode() {
 
       ValidateType(SrcAddr, DestV.MemorySlotsAssigned.front());
 
+      TokenTypes SrcVDT = SBMemory.at(SrcAddr).DataType,
+                 DestVDT = DestV.DataType;
+      std::string Data;
+
       while (SBMemory.at(SrcAddr).DataType != TokenTypes::Unknown) {
         if (MemorySlotCounter > 0 && DestV.DataType == TokenTypes::CharVal) {
           ShowError(BCR, ErrorTypes::InvalidDataTypeInVariable);
@@ -182,8 +186,14 @@ void ResolveWriteMode() {
           SBMemory.at(MemoryAllocated).DataType = SBMemory.at(SrcAddr).DataType;
           DestV.MemorySlotsAssigned.push_back(MemoryAllocated);
         }
+        if (DestVDT == TokenTypes::IntVal && SrcVDT == TokenTypes::DoubleVal &&
+            SBMemory.at(SrcAddr).Data != "")
+          // convert to int
+          Data = std::to_string(std::stoi(SBMemory.at(SrcAddr).Data));
+        else
+          Data = SBMemory.at(SrcAddr).Data;
         DestAddr = DestV.MemorySlotsAssigned.at(MemorySlotCounter);
-        SBMemory.at(DestAddr).Data = SBMemory.at(SrcAddr).Data;
+        SBMemory.at(DestAddr).Data = Data;
         SBMemory.at(SrcAddr).DataType = TokenTypes::Empty;
         SBMemory.at(SrcAddr).Data = "";
         ReleaseMemoryFromStream();
@@ -304,14 +314,14 @@ double OperateMathExpr() {
       switch (BCR.TypeRepr) {
       case TokenTypes::IntVal:
       case TokenTypes::DoubleVal:
-        EvalStack.push(std::stoi(BCR.LiteralToken));
+        EvalStack.push(std::stod(BCR.LiteralToken));
         break;
       case TokenTypes::VariableID: {
         TokenTypes DT =
             GetVariableMetaData(std::stoi(BCR.LiteralToken))->DataType;
         if (DT != TokenTypes::IntVal && DT != TokenTypes::DoubleVal)
           ShowError(BCR, ErrorTypes::NonDigitDataForclc);
-        EvalStack.push(std::stoi(GetDataFromToken()));
+        EvalStack.push(std::stod(GetDataFromToken()));
         break;
       }
       case TokenTypes::ArrayHint: {
@@ -319,7 +329,7 @@ double OperateMathExpr() {
             GetVariableMetaData(std::stoi(BCR.LiteralToken))->DataType;
         if (DT != TokenTypes::IntVal && DT != TokenTypes::DoubleVal)
           ShowError(BCR, ErrorTypes::NonDigitDataForclc);
-        EvalStack.push(std::stoi(GetArrayData()));
+        EvalStack.push(std::stod(GetArrayData()));
         break;
       }
       case TokenTypes::Add:
@@ -350,6 +360,10 @@ double OperateMathExpr() {
       default:
         break;
       }
+      BCP++;
+      if (!CheckIfAppBCP())
+        break;
+      BCR = ByteCode.at(BCP);
     }
   }
   return EvalStack.top();
@@ -384,7 +398,7 @@ void ResolveReadMode(TokenTypes cmd) {
       break; // Breaks inner switch
     }
     case TokenTypes::MathExpr: {
-      int Value = OperateMathExpr();
+      double Value = OperateMathExpr();
       InsertDataInSB(std::to_string(Value), TokenTypes::DoubleVal);
       AddNullChar();
       break;
