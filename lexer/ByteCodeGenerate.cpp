@@ -344,7 +344,7 @@ int Handleclc(const TokenizedLineDT &Line, const int &LPT) {
   }
   ByteCode.push_back(CreateByteCodeToken("", -1, -1, TokenTypes::MathExprEnd));
 
-  return InterruptedPtr++;
+  return InterruptedPtr + 2;
 }
 
 } // namespace
@@ -364,7 +364,6 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
     int LinePointer = 0;
     while (LinePointer < Line.size()) {
       TokenDT Token = Line.at(LinePointer);
-      std::cout << Token.LiteralToken << std::endl;
       TokenTypes TypeOfToken = DetermineType(Token.LiteralToken);
       int LiN = Token.LineNum, CoN = Token.ColNum;
       if (TypeOfToken == TokenTypes::Unknown)

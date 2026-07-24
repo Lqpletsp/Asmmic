@@ -8,9 +8,8 @@
 #include <utility>
 #include <vector>
 
-double OperateMathExpr();
-
 namespace {
+double OperateMathExpr();
 
 bool CheckIfAppBCP() { return (BCP + 1 >= ByteCode.size()) ? false : true; }
 
@@ -29,8 +28,6 @@ void ReleaseMemoryFromStream() {
 }
 void ValidateType(const int &MemoryAdr1, const int &MemoryAdr2) {
   RawDataRepr Var1 = SBMemory.at(MemoryAdr1), Var2 = SBMemory.at(MemoryAdr2);
-  // std::cout << static_cast<int>(Var1.DataType) << '\n';
-  // std::cout << static_cast<int>(Var2.DataType) << '\n';
   if (!(Var1.DataType == Var2.DataType ||
         (Var1.DataType == TokenTypes::DoubleVal &&
          Var2.DataType == TokenTypes::IntVal) ||
@@ -284,6 +281,7 @@ std::string GetDataFromToken() {
   }
   case TokenTypes::MathExpr:
     Data = std::to_string(OperateMathExpr());
+    break;
   default:
     ShowError(BCR, ErrorTypes::GarbageArgInACommand);
     break;
@@ -291,7 +289,7 @@ std::string GetDataFromToken() {
 
   return Data;
 }
-auto OperateMathExpr() {
+double OperateMathExpr() {
   // the function is called when MathExpr byte code
   BCP++;
   std::stack<double> EvalStack;
@@ -314,6 +312,7 @@ auto OperateMathExpr() {
         if (DT != TokenTypes::IntVal && DT != TokenTypes::DoubleVal)
           ShowError(BCR, ErrorTypes::NonDigitDataForclc);
         EvalStack.push(std::stoi(GetDataFromToken()));
+        break;
       }
       case TokenTypes::ArrayHint: {
         TokenTypes DT =
@@ -321,6 +320,7 @@ auto OperateMathExpr() {
         if (DT != TokenTypes::IntVal && DT != TokenTypes::DoubleVal)
           ShowError(BCR, ErrorTypes::NonDigitDataForclc);
         EvalStack.push(std::stoi(GetArrayData()));
+        break;
       }
       case TokenTypes::Add:
       case TokenTypes::Mlt:
@@ -346,6 +346,7 @@ auto OperateMathExpr() {
         default:
           break;
         }
+        break;
       default:
         break;
       }
