@@ -15,13 +15,11 @@ TokenizedCodeDT TokenizeCode(const std::string &MAINCODE) {
   std::string CurrentToken;
   TokenizedLineDT TokenizedLine;
   TokenizedCodeDT TokenizedCode;
-  int RowCount = 1;
-  int ColCount = 0;
-  int TokenStartCol = 1;
-  bool inString = false;
-  bool inComment = false;
+  int RowCount = 1, ColCount = 0, TokenStartCol = 1, CodePTR = 0;
+  bool inString = false, inComment = false;
+  while (CodePTR < MAINCODE.size()) {
 
-  for (const char ch : MAINCODE) {
+    char ch = MAINCODE.at(CodePTR);
     ColCount += 1;
 
     if (ch == '\n' || ch == '\r') {
@@ -74,8 +72,9 @@ TokenizedCodeDT TokenizeCode(const std::string &MAINCODE) {
         }
         TokenizedLine.clear();
       } else if (ch == ' ' || ch == '\t' || ch == '*' || ch == '@' ||
-                 ch == ':' || ch == '+' || ch == '^' || ch == '-' ||
-                 ch == '/' || ch == ']' || ch == '$' || ch == ',') {
+                 ch == ':' || ch == '+' || ch == '-' || ch == '/' ||
+                 ch == ']' || ch == ',' || ch == '&' || ch == '(' ||
+                 ch == ')' || ch == '>' || ch == '<' || ch == '=') {
 
         // Flush existing word token
         if (!CurrentToken.empty()) {
@@ -83,11 +82,10 @@ TokenizedCodeDT TokenizeCode(const std::string &MAINCODE) {
               PushToken(CurrentToken, RowCount, TokenStartCol));
           CurrentToken.clear();
         }
-
         // If it's an operator, capture it as its own token
         if (ch != ' ' && ch != '\t' && ch != ',') {
           TokenizedLine.push_back(
-              PushToken(std::string(1, ch), RowCount, ColCount));
+              PushToken(std::string(1, ch), RowCount, TokenStartCol));
         }
       } else {
         // If we are starting a brand new token, record its column position
@@ -97,6 +95,7 @@ TokenizedCodeDT TokenizeCode(const std::string &MAINCODE) {
         CurrentToken += ch;
       }
     }
+    CodePTR++;
   }
   if (!CurrentToken.empty()) {
     TokenizedLine.push_back(PushToken(CurrentToken, RowCount, TokenStartCol));

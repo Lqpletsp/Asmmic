@@ -203,11 +203,24 @@ template <typename T> int HandleVariables(const T &Line, TokenDT &Token) {
 }
 int GetPrecedence(TokenTypes type) {
   switch (type) {
-  case TokenTypes::Mlt:
-  case TokenTypes::Div:
+  case TokenTypes::Not: // '!' (Unary)
+    return 6;
+  case TokenTypes::Mlt: // '*'
+  case TokenTypes::Div: // '/'
+    return 5;
+  case TokenTypes::Add: // '+'
+  case TokenTypes::Min: // '-'
+    return 4;
+  case TokenTypes::LessThan:     // '<'
+  case TokenTypes::GreaterThan:  // '>'
+  case TokenTypes::LessEqual:    // '<='
+  case TokenTypes::GreaterEqual: // '>='
+  case TokenTypes::Equal:        // '=='
+  case TokenTypes::NotEqual:     // '!='
+    return 3;
+  case TokenTypes::And: // '&'
     return 2;
-  case TokenTypes::Add:
-  case TokenTypes::Min:
+  case TokenTypes::Or: // '~' (Logical OR)
     return 1;
   default:
     return 0;
@@ -240,8 +253,11 @@ bool IsOperand(TokenTypes type) {
     return false;
   }
 }
-int Handleclc(const TokenizedLineDT &Line, const int &LPT) {
+int HandleShuntingYard(const TokenizedLineDT &Line, const int &LPT,
+                       const std::string &cmd) {
   // shunting yard algorithm
+  // if the cmd is clc, add MathExpr but if cmd is evl add BoolExpr
+  // if evl "+" is "OR", "*" is "AND", "!" is "NOT"
   std::deque<TokenDT> outputQueue;
   std::stack<TokenDT> operatorStack;
   int InterruptedPtr = 0;
@@ -323,8 +339,9 @@ int Handleclc(const TokenizedLineDT &Line, const int &LPT) {
     case TokenTypes::Min:
     case TokenTypes::Mlt:
     case TokenTypes::Div:
-      ByteCode.push_back(
-          CreateByteCodeToken(Token.LiteralToken, LiN, CoN, TypeOfToken));
+      if (cmd == "clc")
+        ByteCode.push_back(
+            CreateByteCodeToken(Token.LiteralToken, LiN, CoN, TypeOfToken));
       outputQueue.pop_front();
       break;
     case TokenTypes::Identifier: {
@@ -381,7 +398,7 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
       else if (TypeOfToken == TokenTypes::clc) {
         TokenizedLineDT ClcSlicedLine =
             SliceStuff(LinePointer + 1, Line.size() - 1, Line);
-        int iteration = Handleclc(ClcSlicedLine, LinePointer);
+        int iteration = HandleShuntingYard(ClcSlicedLine, LinePointer, "clc");
         LinePointer += iteration;
         continue;
 

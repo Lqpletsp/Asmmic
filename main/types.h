@@ -49,7 +49,12 @@ enum class TokenTypes {
   And,
   Or,
   Not,
-  Xor,
+  LessThan,
+  GreaterThan,
+  Equal,
+  LessEqual,
+  GreaterEqual,
+  NotEqual,
   // mid-line commands
   var,
   mem,
@@ -79,10 +84,12 @@ struct VariableDT {
 // THIS IS THE MAIN CODE!!!
 inline std::string MAINCODE = R"(
 dec .mem 100; 
-dec .var ~d Number; 
-set .clc 10-0.2] : Number; 
-out Number ~n .clc 10-0.8; 
+dec .var ~d DoubleNumber ~i IntNumber; 
+set 10 : IntNumber; 
+set IntNumber: DoubleNumber;
+out IntNumber;
  )";
+
 inline std::vector<ByteCodeDT> ByteCode;
 
 struct RawDataRepr {
