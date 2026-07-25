@@ -31,6 +31,8 @@ enum class TokenTypes {
   MemoryAddress,
   MathExpr,
   MathExprEnd,
+  BoolExpr,
+  BoolExprEnd,
   ArrEnd,
   End,
   // data types
@@ -59,6 +61,7 @@ enum class TokenTypes {
   var,
   mem,
   clc,
+  evl,
   // commands
   out,
   inp,
@@ -68,6 +71,7 @@ enum class TokenTypes {
   // symbols
   Colon,   //":"
   Stopper, // "]"
+  Parenthesis,
 };
 
 struct ByteCodeDT {
@@ -83,11 +87,7 @@ struct VariableDT {
 };
 // THIS IS THE MAIN CODE!!!
 inline std::string MAINCODE = R"(
-dec .mem 100; 
-dec .var ~d DoubleNumber ~i IntNumber; 
-set 10 : IntNumber; 
-set IntNumber: DoubleNumber;
-out IntNumber;
+  out .evl  10 == 10; 
  )";
 
 inline std::vector<ByteCodeDT> ByteCode;

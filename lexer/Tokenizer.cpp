@@ -32,11 +32,13 @@ TokenizedCodeDT TokenizeCode(const std::string &MAINCODE) {
       }
       RowCount += 1;
       ColCount = 0;
+      ++CodePTR;
       continue;
     }
     if (inComment) {
       if (ch == '|')
         inComment = false;
+      ++CodePTR;
       continue;
     }
     if (inString) {
@@ -47,6 +49,7 @@ TokenizedCodeDT TokenizeCode(const std::string &MAINCODE) {
             PushToken(CurrentToken, RowCount, TokenStartCol));
         CurrentToken.clear();
       }
+      ++CodePTR;
       continue;
     }
 
@@ -85,7 +88,7 @@ TokenizedCodeDT TokenizeCode(const std::string &MAINCODE) {
         // If it's an operator, capture it as its own token
         if (ch != ' ' && ch != '\t' && ch != ',') {
           TokenizedLine.push_back(
-              PushToken(std::string(1, ch), RowCount, TokenStartCol));
+              PushToken(std::string(1, ch), RowCount, ColCount));
         }
       } else {
         // If we are starting a brand new token, record its column position

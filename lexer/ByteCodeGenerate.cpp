@@ -33,6 +33,8 @@ bool CheckIfMidLineCommand(const TokenTypes &EnumTokenVal) {
 TokenTypes ReturnMidLineCommandVal(const std::string &Token) {
   if (Token == "clc")
     return TokenTypes::clc;
+  else if (Token == "evl")
+    return TokenTypes::evl;
   else
     return TokenTypes::Unknown;
 }
@@ -74,12 +76,14 @@ TokenTypes DetermineType(const std::string &Token) {
     std::string RawMLC = SliceStuff(1, Token.size() - 1, Token);
     CommandType = ReturnMidLineCommandVal(RawMLC);
     return CommandType;
-  } else if (Token.front() == '~')
-    return TokenTypes::Flag;
-  else if (Token == "+")
+  } else if (Token.front() == '~') {
+    return (Token.size() > 1) ? TokenTypes::Flag : TokenTypes::Or;
+  } else if (Token == "+")
     return TokenTypes::Add;
   else if (Token == "@")
     return TokenTypes::MemoryAddressIndicator;
+  else if (Token == "(" || Token == ")")
+    return TokenTypes::Parenthesis;
   else if (Token == "-")
     return TokenTypes::Min;
   else if (Token == "*")
@@ -90,6 +94,22 @@ TokenTypes DetermineType(const std::string &Token) {
     return TokenTypes::Colon;
   else if (Token == "]")
     return TokenTypes::Stopper;
+  else if (Token == "<=")
+    return TokenTypes::LessEqual;
+  else if (Token == ">=")
+    return TokenTypes::GreaterEqual;
+  else if (Token == "!=")
+    return TokenTypes::NotEqual;
+  else if (Token == "==" || Token == "=")
+    return TokenTypes::Equal;
+  else if (Token == ">")
+    return TokenTypes::GreaterThan;
+  else if (Token == "<")
+    return TokenTypes::LessThan;
+  else if (Token == "!")
+    return TokenTypes::Not;
+  else if (Token == "&")
+    return TokenTypes::And;
   else if ((Token.front() == '"' && Token.back() == '"') ||
            (Token.front() == '\'' && Token.back() == '\'')) {
     if (Token.size() == 3)
@@ -232,6 +252,13 @@ bool IsLeftAssociative(TokenTypes type) {
   case TokenTypes::Add:
   case TokenTypes::Min:
   case TokenTypes::Mlt:
+  case TokenTypes::And:
+  case TokenTypes::Or:
+  case TokenTypes::Not:
+  case TokenTypes::NotEqual:
+  case TokenTypes::Equal:
+  case TokenTypes::LessEqual:
+  case TokenTypes::GreaterEqual:
   case TokenTypes::Div:
     return true;
   default:
@@ -240,13 +267,20 @@ bool IsLeftAssociative(TokenTypes type) {
 }
 bool IsOperator(TokenTypes type) {
   return type == TokenTypes::Add || type == TokenTypes::Min ||
-         type == TokenTypes::Mlt || type == TokenTypes::Div;
+         type == TokenTypes::Mlt || type == TokenTypes::Div ||
+         type == TokenTypes::GreaterEqual || type == TokenTypes::LessEqual ||
+         type == TokenTypes::GreaterThan || type == TokenTypes::Not ||
+         type == TokenTypes::And || type == TokenTypes::Or ||
+         type == TokenTypes::LessThan || type == TokenTypes::NotEqual ||
+         type == TokenTypes::Equal;
 }
 bool IsOperand(TokenTypes type) {
   switch (type) {
   case TokenTypes::IntVal:
   case TokenTypes::DoubleVal:
+  case TokenTypes::ArrayHint:
   case TokenTypes::Identifier:
+  case TokenTypes::BoolVal:
   case TokenTypes::MemoryAddressIndicator:
     return true;
   default:
@@ -260,11 +294,27 @@ int HandleShuntingYard(const TokenizedLineDT &Line, const int &LPT,
   // if evl "+" is "OR", "*" is "AND", "!" is "NOT"
   std::deque<TokenDT> outputQueue;
   std::stack<TokenDT> operatorStack;
-  int InterruptedPtr = 0;
 
-  for (size_t LinePointer = 0; LinePointer < Line.size(); ++LinePointer) {
+  int InterruptedPtr = 0;
+  size_t LinePointer = 0;
+  while (LinePointer < Line.size()) {
     TokenDT token = Line.at(LinePointer);
+    std::string LS = token.LiteralToken;
+    if (LS == "<" || LS == ">" || LS == "!" || LS == "=") {
+      // to support multi len tokens (>=, <=, !=, ==)
+      ++LinePointer;
+      if (LinePointer >= Line.size())
+        break;
+      token = Line.at(LinePointer);
+      if (token.LiteralToken != "=")
+        --LinePointer; // go back, different token
+      else {
+        LS += token.LiteralToken;
+        token.LiteralToken = LS;
+      }
+    }
     TokenTypes type = DetermineType(token.LiteralToken);
+    std::cout << static_cast<int>(type) << std::endl;
     if (token.LiteralToken == "]") {
       InterruptedPtr =
           LinePointer; // stopper stops the execution of the command
@@ -313,6 +363,7 @@ int HandleShuntingYard(const TokenizedLineDT &Line, const int &LPT,
       }
     }
     InterruptedPtr = LinePointer;
+    LinePointer++;
   }
 
   while (!operatorStack.empty()) {
@@ -325,7 +376,11 @@ int HandleShuntingYard(const TokenizedLineDT &Line, const int &LPT,
     operatorStack.pop();
   }
   // load the infix form for the bytecode
-  ByteCode.push_back(CreateByteCodeToken("", -1, -1, TokenTypes::MathExpr));
+  TokenTypes StartIndication =
+      (cmd == "clc") ? TokenTypes::MathExpr : TokenTypes::BoolExpr;
+  TokenTypes EndIndication =
+      (cmd == "clc") ? TokenTypes::MathExprEnd : TokenTypes::BoolExprEnd;
+  ByteCode.push_back(CreateByteCodeToken("", -1, -1, StartIndication));
   while (!outputQueue.empty()) {
     TokenDT Token = outputQueue.front();
     TokenTypes TypeOfToken = DetermineType(Token.LiteralToken);
@@ -339,9 +394,16 @@ int HandleShuntingYard(const TokenizedLineDT &Line, const int &LPT,
     case TokenTypes::Min:
     case TokenTypes::Mlt:
     case TokenTypes::Div:
-      if (cmd == "clc")
-        ByteCode.push_back(
-            CreateByteCodeToken(Token.LiteralToken, LiN, CoN, TypeOfToken));
+    case TokenTypes::And:
+    case TokenTypes::Or:
+    case TokenTypes::Not:
+    case TokenTypes::LessEqual:
+    case TokenTypes::LessThan:
+    case TokenTypes::GreaterEqual:
+    case TokenTypes::GreaterThan:
+    case TokenTypes::Equal:
+      ByteCode.push_back(
+          CreateByteCodeToken(Token.LiteralToken, LiN, CoN, TypeOfToken));
       outputQueue.pop_front();
       break;
     case TokenTypes::Identifier: {
@@ -355,11 +417,10 @@ int HandleShuntingYard(const TokenizedLineDT &Line, const int &LPT,
       break;
     }
   }
-  ByteCode.push_back(CreateByteCodeToken("", -1, -1, TokenTypes::MathExprEnd));
+  ByteCode.push_back(CreateByteCodeToken("", -1, -1, EndIndication));
 
   return InterruptedPtr + 2;
 }
-
 } // namespace
 
 void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
@@ -395,10 +456,13 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
       if (TypeOfToken == TokenTypes::Flag)
         LiteralString =
             SliceStuff(1, Token.LiteralToken.size() - 1, Token.LiteralToken);
-      else if (TypeOfToken == TokenTypes::clc) {
-        TokenizedLineDT ClcSlicedLine =
+      else if (TypeOfToken == TokenTypes::clc ||
+               TypeOfToken == TokenTypes::evl) {
+        TokenizedLineDT SlicedLine =
             SliceStuff(LinePointer + 1, Line.size() - 1, Line);
-        int iteration = HandleShuntingYard(ClcSlicedLine, LinePointer, "clc");
+        std::string LS =
+            SliceStuff(1, Token.LiteralToken.size() - 1, Token.LiteralToken);
+        int iteration = HandleShuntingYard(SlicedLine, LinePointer, LS);
         LinePointer += iteration;
         continue;
 
