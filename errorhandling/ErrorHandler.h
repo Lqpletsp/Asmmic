@@ -30,7 +30,9 @@ enum class ErrorTypes {
   AttemptedMultiDimensionalArrays,
   IncompleteArgumentsForLineCommand,
   NoArrayIndexGiven,
-  NonDigitDataForclc
+  NonDigitDataForclc,
+  InvalidBooleanExpression,
+
 };
 
 inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
@@ -82,6 +84,7 @@ inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
     {ErrorTypes::NoArrayIndexGiven,
      "Attemped to store data as a data structure"},
     {ErrorTypes::NonDigitDataForclc, "Attempted non digit data for clc"},
-};
+    {ErrorTypes::InvalidBooleanExpression,
+     "Boolean expression given was invalid"}};
 void ShowError(const TokenDT &Token, const ErrorTypes &Type);
 void ShowError(const ByteCodeDT &Token, const ErrorTypes &Type);

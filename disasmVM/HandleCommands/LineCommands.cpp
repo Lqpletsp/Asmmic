@@ -94,7 +94,7 @@ std::pair<int, int> ResolveArrays() {
                    "PossibleErrorInLexer-NOTdisasmError\n";
       break;
     }
-    BCP++;
+    ++BCP;
     if (!CheckIfAppBCP())
       break;
     BCR = ByteCode.at(BCP);
@@ -299,6 +299,192 @@ std::string GetDataFromToken() {
 
   return Data;
 }
+bool OperateBoolExpr() {
+  // Function called when BoolExpr bytecode is encountered
+  BCP++;
+
+  struct EvalItem {
+    std::string Data;
+    TokenTypes DataType;
+  };
+
+  std::stack<EvalItem> EvalStack;
+  // Helper to parse double or int strings safely
+  auto ToDouble = [](const std::string &val) -> double {
+    try {
+      return std::stod(val);
+    } catch (...) {
+      return 0.0;
+    }
+  };
+
+  // Helper function to compare two values based on relational operator
+  auto EvaluateComparison = [&](const EvalItem &lhs, const EvalItem &rhs,
+                                TokenTypes op) -> bool {
+    bool isLhsNumeric = (lhs.DataType == TokenTypes::IntVal ||
+                         lhs.DataType == TokenTypes::DoubleVal ||
+                         lhs.DataType == TokenTypes::CharVal);
+    bool isRhsNumeric = (rhs.DataType == TokenTypes::IntVal ||
+                         rhs.DataType == TokenTypes::DoubleVal ||
+                         rhs.DataType == TokenTypes::CharVal);
+
+    if (isLhsNumeric && isRhsNumeric) {
+      double numL = ToDouble(lhs.Data);
+      double numR = ToDouble(rhs.Data);
+
+      switch (op) {
+      case TokenTypes::Equal:
+        return numL == numR;
+      case TokenTypes::LessThan:
+        return numL < numR;
+      case TokenTypes::GreaterThan:
+        return numL > numR;
+      case TokenTypes::LessEqual:
+        return numL <= numR;
+      case TokenTypes::GreaterEqual:
+        return numL >= numR;
+      default:
+        return false;
+      }
+    }
+
+    // String / Generic lexical comparisons
+    switch (op) {
+    case TokenTypes::Equal:
+      return lhs.Data == rhs.Data;
+    case TokenTypes::LessThan:
+      return lhs.Data < rhs.Data;
+    case TokenTypes::GreaterThan:
+      return lhs.Data > rhs.Data;
+    case TokenTypes::LessEqual:
+      return lhs.Data <= rhs.Data;
+    case TokenTypes::GreaterEqual:
+      return lhs.Data >= rhs.Data;
+    default:
+      return false;
+    }
+  };
+
+  if (!CheckIfAppBCP())
+    return false;
+
+  while (BCP < ByteCode.size()) {
+    ByteCodeDT BCR = ByteCode.at(BCP);
+
+    if (BCR.TypeRepr == TokenTypes::End ||
+        BCR.TypeRepr == TokenTypes::NewLine ||
+        BCR.TypeRepr == TokenTypes::BoolExprEnd) {
+      break;
+    }
+
+    switch (BCR.TypeRepr) {
+    case TokenTypes::IntVal:
+    case TokenTypes::StringVal:
+    case TokenTypes::CharVal:
+    case TokenTypes::DoubleVal:
+    case TokenTypes::BoolVal: {
+      EvalStack.push({BCR.LiteralToken, BCR.TypeRepr});
+      break;
+    }
+
+    case TokenTypes::VariableID: {
+      std::string data = GetDataFromToken();
+      TokenTypes dataType =
+          GetVariableMetaData(std::stoi(BCR.LiteralToken))->DataType;
+      EvalStack.push({data, dataType});
+      break;
+    }
+
+    case TokenTypes::ArrayHint: {
+      std::string data = GetArrayData();
+      TokenTypes dataType =
+          GetVariableMetaData(std::stoi(BCR.LiteralToken))->DataType;
+      EvalStack.push({data, dataType});
+      break;
+    }
+
+    // 3. COMPARISON OPERATORS (<, <=, >, >=, ==)
+    case TokenTypes::LessEqual:
+    case TokenTypes::GreaterEqual:
+    case TokenTypes::Equal:
+    case TokenTypes::LessThan:
+    case TokenTypes::GreaterThan: {
+      if (EvalStack.size() < 2) {
+        ShowError(BCR, ErrorTypes::InvalidBooleanExpression);
+        return false;
+      }
+      EvalItem rhs = EvalStack.top();
+      EvalStack.pop();
+      EvalItem lhs = EvalStack.top();
+      EvalStack.pop();
+
+      bool result = EvaluateComparison(lhs, rhs, BCR.TypeRepr);
+      EvalStack.push({result ? "T" : "F", TokenTypes::BoolVal});
+      break;
+    }
+
+    // 4. LOGICAL OPERATORS (AND, OR, NOT)
+    case TokenTypes::And: {
+      if (EvalStack.size() < 2) {
+        ShowError(BCR, ErrorTypes::InvalidBooleanExpression);
+        return false;
+      }
+      EvalItem rhs = EvalStack.top();
+      EvalStack.pop();
+      EvalItem lhs = EvalStack.top();
+      EvalStack.pop();
+
+      bool b1 = (lhs.Data == "T");
+      bool b2 = (rhs.Data == "T");
+
+      EvalStack.push({(b1 && b2) ? "T" : "F", TokenTypes::BoolVal});
+      break;
+    }
+
+    case TokenTypes::Or: {
+      if (EvalStack.size() < 2) {
+        ShowError(BCR, ErrorTypes::InvalidBooleanExpression);
+        return false;
+      }
+      EvalItem rhs = EvalStack.top();
+      EvalStack.pop();
+      EvalItem lhs = EvalStack.top();
+      EvalStack.pop();
+
+      bool b1 = (lhs.Data == "T");
+      bool b2 = (rhs.Data == "T");
+
+      EvalStack.push({(b1 || b2) ? "T" : "F", TokenTypes::BoolVal});
+      break;
+    }
+
+    case TokenTypes::Not: {
+      if (EvalStack.empty()) {
+        ShowError(BCR, ErrorTypes::InvalidBooleanExpression);
+        return false;
+      }
+      EvalItem item = EvalStack.top();
+      EvalStack.pop();
+
+      bool b = (item.Data == "T");
+      EvalStack.push({(!b) ? "T" : "F", TokenTypes::BoolVal});
+      break;
+    }
+
+    default:
+      break;
+    }
+
+    ++BCP;
+  }
+
+  // FINAL RESULT EVALUATION
+  if (EvalStack.empty()) {
+    return false;
+  }
+
+  return (EvalStack.top().Data == "T");
+}
 double OperateMathExpr() {
   // the function is called when MathExpr byte code
   BCP++;
@@ -360,7 +546,7 @@ double OperateMathExpr() {
       default:
         break;
       }
-      BCP++;
+      ++BCP;
       if (!CheckIfAppBCP())
         break;
       BCR = ByteCode.at(BCP);
@@ -449,12 +635,12 @@ void ResolveReadMode(TokenTypes cmd) {
     default:
       ShowError(BCR, ErrorTypes::GarbageArgInACommand);
     }
-    BCP++;
+    ++BCP;
     if (!CheckIfAppBCP())
       return;
     BCR = ByteCode.at(BCP);
   }
-  BCP++;
+  ++BCP;
 }
 std::pair<TokenTypes, std::string> GetTopStreamData() {
   VariableDT &SrcV = *GetVariableMetaData(0);
@@ -483,7 +669,7 @@ void outCommand() {
 }
 
 void setCommand() {
-  BCP++;
+  ++BCP;
   ResolveReadMode(TokenTypes::set);
   if (!CheckIfAppBCP())
     return;
@@ -491,7 +677,7 @@ void setCommand() {
 }
 
 void mlcCommand() {
-  BCP++;
+  ++BCP;
   ResolveReadMode(TokenTypes::set);
   ByteCodeDT BCR = ByteCode.at(BCP);
   while (BCR.TypeRepr != TokenTypes::NewLine &&
@@ -530,7 +716,7 @@ void mlcCommand() {
       break;
     }
 
-    BCP++;
+    ++BCP;
     if (!CheckIfAppBCP())
       return;
     BCR = ByteCode.at(BCP);
