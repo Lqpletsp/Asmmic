@@ -68,6 +68,7 @@ enum class TokenTypes {
   dec,
   set,
   mlc,
+  rpt, // loop
   // symbols
   Colon,   //":"
   Stopper, // "]"
@@ -87,7 +88,7 @@ struct VariableDT {
 };
 // THIS IS THE MAIN CODE!!!
 inline std::string MAINCODE = R"(
-  out .evl  10 == 10; 
+  out .evl T .and T;
  )";
 
 inline std::vector<ByteCodeDT> ByteCode;

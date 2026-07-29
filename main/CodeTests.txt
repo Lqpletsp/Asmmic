@@ -1,11 +1,1 @@
-dec .mem 100; 
-dec .var ~i x; 
-set 0: x ;
-rpt .evl x < 10;
-  out x; 
-  inc x;
-end .rpt;
-
-.inc x;
-
-if "inc x" then the byte code transforms to  -> MathExpr x 1 + MathExprEnd
+out .evl T

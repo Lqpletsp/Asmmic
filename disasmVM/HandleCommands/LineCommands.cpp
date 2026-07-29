@@ -10,6 +10,7 @@
 
 namespace {
 double OperateMathExpr();
+bool OperateBoolExpr();
 
 bool CheckIfAppBCP() { return (BCP + 1 >= ByteCode.size()) ? false : true; }
 
@@ -250,6 +251,7 @@ std::string GetDataFromToken() {
   case TokenTypes::CharVal:
   case TokenTypes::IntVal:
   case TokenTypes::DoubleVal:
+  case TokenTypes::BoolVal:
     break;
   case TokenTypes::Flag:
     for (const char &ch : BCR.LiteralToken) {
@@ -262,12 +264,10 @@ std::string GetDataFromToken() {
       }
     }
     break;
-  case TokenTypes::BoolVal:
-    if (Data == "T")
-      Data = "true";
-    else
-      Data = "false";
+  case TokenTypes::BoolExpr: {
+    Data = (OperateBoolExpr()) ? "T" : "F";
     break;
+  }
   case TokenTypes::VariableID: {
     VariableDT &srcVar = *GetVariableMetaData(std::stoi(BCR.LiteralToken));
     int DataMAdr;
@@ -300,7 +300,6 @@ std::string GetDataFromToken() {
   return Data;
 }
 bool OperateBoolExpr() {
-  // Function called when BoolExpr bytecode is encountered
   BCP++;
 
   struct EvalItem {
@@ -309,7 +308,7 @@ bool OperateBoolExpr() {
   };
 
   std::stack<EvalItem> EvalStack;
-  // Helper to parse double or int strings safely
+
   auto ToDouble = [](const std::string &val) -> double {
     try {
       return std::stod(val);
@@ -318,7 +317,6 @@ bool OperateBoolExpr() {
     }
   };
 
-  // Helper function to compare two values based on relational operator
   auto EvaluateComparison = [&](const EvalItem &lhs, const EvalItem &rhs,
                                 TokenTypes op) -> bool {
     bool isLhsNumeric = (lhs.DataType == TokenTypes::IntVal ||
@@ -343,12 +341,13 @@ bool OperateBoolExpr() {
         return numL <= numR;
       case TokenTypes::GreaterEqual:
         return numL >= numR;
+      case TokenTypes::NotEqual:
+        return numL != numR;
       default:
         return false;
       }
     }
 
-    // String / Generic lexical comparisons
     switch (op) {
     case TokenTypes::Equal:
       return lhs.Data == rhs.Data;
@@ -360,6 +359,8 @@ bool OperateBoolExpr() {
       return lhs.Data <= rhs.Data;
     case TokenTypes::GreaterEqual:
       return lhs.Data >= rhs.Data;
+    case TokenTypes::NotEqual:
+      return lhs.Data != rhs.Data;
     default:
       return false;
     }
@@ -368,21 +369,19 @@ bool OperateBoolExpr() {
   if (!CheckIfAppBCP())
     return false;
 
-  while (BCP < ByteCode.size()) {
-    ByteCodeDT BCR = ByteCode.at(BCP);
-
-    if (BCR.TypeRepr == TokenTypes::End ||
-        BCR.TypeRepr == TokenTypes::NewLine ||
-        BCR.TypeRepr == TokenTypes::BoolExprEnd) {
-      break;
-    }
+  // FETCH INSIDE THE LOOP OR CONDITION
+  while (BCP < ByteCode.size() &&
+         ByteCode.at(BCP).TypeRepr != TokenTypes::BoolExprEnd) {
+    ByteCodeDT BCR =
+        ByteCode.at(BCP); // <--- Fetch current bytecode instruction here!
 
     switch (BCR.TypeRepr) {
     case TokenTypes::IntVal:
     case TokenTypes::StringVal:
     case TokenTypes::CharVal:
     case TokenTypes::DoubleVal:
-    case TokenTypes::BoolVal: {
+    case TokenTypes::TrueVal:
+    case TokenTypes::FalseVal: {
       EvalStack.push({BCR.LiteralToken, BCR.TypeRepr});
       break;
     }
@@ -403,15 +402,14 @@ bool OperateBoolExpr() {
       break;
     }
 
-    // 3. COMPARISON OPERATORS (<, <=, >, >=, ==)
     case TokenTypes::LessEqual:
     case TokenTypes::GreaterEqual:
     case TokenTypes::Equal:
     case TokenTypes::LessThan:
-    case TokenTypes::GreaterThan: {
+    case TokenTypes::GreaterThan:
+    case TokenTypes::NotEqual: {
       if (EvalStack.size() < 2) {
         ShowError(BCR, ErrorTypes::InvalidBooleanExpression);
-        return false;
       }
       EvalItem rhs = EvalStack.top();
       EvalStack.pop();
@@ -423,11 +421,9 @@ bool OperateBoolExpr() {
       break;
     }
 
-    // 4. LOGICAL OPERATORS (AND, OR, NOT)
     case TokenTypes::And: {
       if (EvalStack.size() < 2) {
         ShowError(BCR, ErrorTypes::InvalidBooleanExpression);
-        return false;
       }
       EvalItem rhs = EvalStack.top();
       EvalStack.pop();
@@ -444,7 +440,6 @@ bool OperateBoolExpr() {
     case TokenTypes::Or: {
       if (EvalStack.size() < 2) {
         ShowError(BCR, ErrorTypes::InvalidBooleanExpression);
-        return false;
       }
       EvalItem rhs = EvalStack.top();
       EvalStack.pop();
@@ -461,7 +456,6 @@ bool OperateBoolExpr() {
     case TokenTypes::Not: {
       if (EvalStack.empty()) {
         ShowError(BCR, ErrorTypes::InvalidBooleanExpression);
-        return false;
       }
       EvalItem item = EvalStack.top();
       EvalStack.pop();
@@ -478,7 +472,6 @@ bool OperateBoolExpr() {
     ++BCP;
   }
 
-  // FINAL RESULT EVALUATION
   if (EvalStack.empty()) {
     return false;
   }
@@ -628,6 +621,11 @@ void ResolveReadMode(TokenTypes cmd) {
       }
       InsertDataInSB(Data, BCR.TypeRepr);
       AddNullChar();
+      break;
+    }
+    case TokenTypes::BoolExpr: {
+      std::string result = (OperateBoolExpr()) ? "T" : "F";
+      InsertDataInSB(result, TokenTypes::BoolVal);
       break;
     }
     case TokenTypes::NewLine:

@@ -21,6 +21,9 @@ void InterpretByteCode() {
       break;
     case TokenTypes::mlc:
       mlcCommand();
+      break;
+    case TokenTypes::rpt:
+      break;
     default:
       // std::cout << "NOT READY";
       break;
