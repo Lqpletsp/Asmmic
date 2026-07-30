@@ -393,6 +393,11 @@ bool OperateBoolExpr() {
       EvalStack.push({data, dataType});
       break;
     }
+    case TokenTypes::MathExpr: {
+      std::string Result = std::to_string(OperateMathExpr());
+      EvalStack.push({Result, TokenTypes::DoubleVal});
+      break;
+    }
 
     case TokenTypes::ArrayHint: {
       std::string data = GetArrayData();

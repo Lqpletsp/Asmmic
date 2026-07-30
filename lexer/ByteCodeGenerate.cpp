@@ -197,8 +197,7 @@ template <typename T> int HandleVariables(const T &Line, TokenDT &Token) {
   return LinePointer;
 }
 
-int HandleShuntingYard(const TokenizedLineDT &Line, const int &LPT,
-                       const std::string &cmd) {
+int HandleShuntingYard(const TokenizedLineDT &Line, const std::string &cmd) {
   std::deque<TokenDT> outputQueue;
   std::stack<TokenDT> operatorStack;
 
@@ -298,9 +297,15 @@ int HandleShuntingYard(const TokenizedLineDT &Line, const int &LPT,
 
     TokenTypes type = DetermineType(token.LiteralToken);
 
-    if (token.LiteralToken == "]") {
+    if (type == TokenTypes::Stopper) {
       InterruptedPtr = LinePointer;
       break;
+    } else if (type == TokenTypes::clc || type == TokenTypes::evl) {
+      std::string cmd = (type == TokenTypes::clc) ? "clc" : "evl";
+      TokenizedLineDT SlicedLine =
+          SliceStuff(LinePointer, Line.size() - 1, Line);
+      int Increment = HandleShuntingYard(SlicedLine, cmd);
+      LinePointer += Increment;
     } else if (IsOperand(type)) {
       outputQueue.push_back(token);
     } else if (IsOperator(type)) {
@@ -451,7 +456,7 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
             SliceStuff(LinePointer + 1, Line.size() - 1, Line);
         std::string LS =
             SliceStuff(1, Token.LiteralToken.size() - 1, Token.LiteralToken);
-        int iteration = HandleShuntingYard(SlicedLine, LinePointer, LS);
+        int iteration = HandleShuntingYard(SlicedLine, LS);
         LinePointer += iteration;
         continue;
 
