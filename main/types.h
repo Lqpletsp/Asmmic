@@ -34,7 +34,7 @@ enum class TokenTypes {
   BoolExpr,
   BoolExprEnd,
   ArrEnd,
-  End,
+  ENDCODE,
   // data types
   DoubleVal,
   IntVal,
@@ -68,7 +68,9 @@ enum class TokenTypes {
   dec,
   set,
   mlc,
+  gotoln,
   rpt, // loop
+  end,
   // symbols
   Colon,   //":"
   Stopper, // "]"
@@ -88,7 +90,9 @@ struct VariableDT {
 };
 // THIS IS THE MAIN CODE!!!
 inline std::string MAINCODE = R"(
-  out .evl T;
+  rpt .evl F; 
+  out "Hello world";
+  end .rpt;
  )";
 
 inline std::vector<ByteCodeDT> ByteCode;

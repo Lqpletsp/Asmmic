@@ -32,6 +32,9 @@ enum class ErrorTypes {
   NoArrayIndexGiven,
   NonDigitDataForclc,
   InvalidBooleanExpression,
+  rptStatementBegunButNotEnded,
+  InvalidEndStatement,
+  endrptStatementGivenButNotStarted,
 
 };
 
@@ -85,6 +88,12 @@ inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
      "Attemped to store data as a data structure"},
     {ErrorTypes::NonDigitDataForclc, "Attempted non digit data for clc"},
     {ErrorTypes::InvalidBooleanExpression,
-     "Boolean expression given was invalid"}};
+     "Boolean expression given was invalid"},
+    {ErrorTypes::rptStatementBegunButNotEnded,
+     "rpt statement was started but not ended"},
+    {ErrorTypes::InvalidEndStatement, "end takes a single argument that is a "
+                                      "dependent command but was not given"},
+    {ErrorTypes::endrptStatementGivenButNotStarted,
+     "rpt statement tried to end but was not started"}};
 void ShowError(const TokenDT &Token, const ErrorTypes &Type);
 void ShowError(const ByteCodeDT &Token, const ErrorTypes &Type);

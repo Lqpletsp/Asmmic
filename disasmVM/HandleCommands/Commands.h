@@ -1,4 +1,5 @@
 #pragma once
-void outCommand(); // BCP: Byte Code Pointer
+void outCommand();
 void setCommand();
 void mlcCommand();
+void Handlegotoln();

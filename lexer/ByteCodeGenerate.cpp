@@ -20,6 +20,8 @@ std::unordered_map<std::string, TokenTypes> MapStringAndCommand = {
     {"evl", TokenTypes::evl},
     {"not", TokenTypes::Not},
     {"out", TokenTypes::out},
+    {"rpt", TokenTypes::rpt},
+    {"end", TokenTypes::end},
     {"<=", TokenTypes::LessEqual},
     {">=", TokenTypes::GreaterEqual},
     {"<", TokenTypes::LessThan},
@@ -47,6 +49,8 @@ bool CheckIfCommand(const TokenTypes &EnumTokenVal) {
   case TokenTypes::set:
   case TokenTypes::dec:
   case TokenTypes::mlc:
+  case TokenTypes::rpt:
+  case TokenTypes::end:
     return true;
   default:
     return false;
@@ -418,11 +422,14 @@ int HandleShuntingYard(const TokenizedLineDT &Line, const std::string &cmd) {
 
   return InterruptedPtr + 2;
 }
+
 } // namespace
 
 void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
   ByteCodeDT ByteCodeReprOfTokens;
-  for (const auto &Line : TokenizedCode) {
+  std::stack<int> RPTStartLine;
+  for (size_t i = 0; i < TokenizedCode.size(); ++i) {
+    TokenizedLineDT Line = TokenizedCode.at(i);
     if (Line.size() == 0)
       continue;
     else if (!CheckIfCommand(DetermineType(Line.at(0).LiteralToken))) {
@@ -460,7 +467,36 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
         LinePointer += iteration;
         continue;
 
+      } else if (TypeOfToken == TokenTypes::rpt) {
+        RPTStartLine.push(ByteCode.size());
+        ByteCode.push_back(CreateByteCodeToken(
+            "", -1, -1,
+            TokenTypes::gotoln)); // will be replaced when "end .rpt" line
+        LinePointer++;
+        continue;
+      } else if (TypeOfToken == TokenTypes::end) {
+        LinePointer++;
+        if (LinePointer >= Line.size())
+          ShowError(Token, ErrorTypes::InvalidEndStatement);
+        Token = Line.at(LinePointer);
+        if (Token.LiteralToken == ".rpt") {
+          // assuming the most recent rpt line ended
+          if (RPTStartLine.empty())
+            ShowError(Token, ErrorTypes::endrptStatementGivenButNotStarted);
+          ByteCode.at(RPTStartLine.top()).LiteralToken =
+              std::to_string(ByteCode.size() + 1);
+          // overwrite the start rpt statement to go to line if condition not
+          // met
+          ByteCode.push_back(CreateByteCodeToken(
+              std::to_string(RPTStartLine.top()), -1, -1, TokenTypes::gotoln));
+          // add a bytecode to tell the program to go to the start of rpt
+          // statement for loop
+          RPTStartLine.pop();
+          LinePointer++;
+          continue;
+        }
       } else {
+
         if (TypeOfToken == TokenTypes::StringVal ||
             TypeOfToken == TokenTypes::CharVal) {
           LiteralString =
@@ -474,5 +510,5 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
     }
     ByteCode.push_back(CreateByteCodeToken(";", -1, -1, TokenTypes::NewLine));
   }
-  ByteCode.push_back(CreateByteCodeToken("", -1, -1, TokenTypes::End));
+  ByteCode.push_back(CreateByteCodeToken("", -1, -1, TokenTypes::ENDCODE));
 }

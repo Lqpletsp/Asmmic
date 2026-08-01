@@ -65,9 +65,7 @@ std::pair<int, int> ResolveArrays() {
   VarStack.push(VariableID);
   BCP++;
   BCR = ByteCode.at(BCP);
-  while (BCR.TypeRepr != TokenTypes::NewLine &&
-         BCR.TypeRepr != TokenTypes::End &&
-         BCR.TypeRepr != TokenTypes::ArrEnd) {
+  while (BCR.TypeRepr != TokenTypes::ArrEnd) {
     switch (BCR.TypeRepr) {
     case TokenTypes::MemoryAddressIndicator: {
       break;
@@ -146,7 +144,7 @@ void IncreaseMemorySpaces(const int &VariableID, const int &MemorySpaces) {
 void ResolveWriteMode() {
   ByteCodeDT BCR = ByteCode.at(BCP);
   while (BCR.TypeRepr != TokenTypes::NewLine &&
-         BCR.TypeRepr != TokenTypes::End) {
+         BCR.TypeRepr != TokenTypes::ENDCODE) {
     TokenTypes CurrentTokenType = BCR.TypeRepr;
     switch (CurrentTokenType) {
     case TokenTypes::VariableID: {
@@ -492,9 +490,7 @@ double OperateMathExpr() {
 
     ByteCodeDT BCR = ByteCode.at(BCP);
     double a, b; // numbers to pop and evaluate
-    while (BCR.TypeRepr != TokenTypes::End &&
-           BCR.TypeRepr != TokenTypes::NewLine &&
-           BCR.TypeRepr != TokenTypes::MathExprEnd) {
+    while (BCR.TypeRepr != TokenTypes::MathExprEnd) {
       switch (BCR.TypeRepr) {
       case TokenTypes::IntVal:
       case TokenTypes::DoubleVal:
@@ -558,7 +554,8 @@ void ResolveReadMode(TokenTypes cmd) {
   Mode CurrentState = Read;
   bool NoOtherThanInt = cmd == TokenTypes::mlc;
   while (BCR.TypeRepr != TokenTypes::NewLine &&
-         BCR.TypeRepr != TokenTypes::End) { // no issue on the first iteration
+         BCR.TypeRepr !=
+             TokenTypes::ENDCODE) { // no issue on the first iteration
 
     TokenTypes CurrentTokenType = BCR.TypeRepr;
     switch (CurrentTokenType) {
@@ -631,6 +628,7 @@ void ResolveReadMode(TokenTypes cmd) {
     case TokenTypes::BoolExpr: {
       std::string result = (OperateBoolExpr()) ? "T" : "F";
       InsertDataInSB(result, TokenTypes::BoolVal);
+      AddNullChar();
       break;
     }
     case TokenTypes::NewLine:
@@ -655,14 +653,14 @@ std::pair<TokenTypes, std::string> GetTopStreamData() {
   ReleaseMemoryFromStream(); // to remove the null char
   return {DT, Data};
 }
-} // namespace
 
+} // namespace
 void outCommand() {
   // when called, increment BCP to access the first line argument
   BCP++;
   ByteCodeDT BCR = ByteCode.at(BCP);
   while (BCR.TypeRepr != TokenTypes::NewLine &&
-         BCR.TypeRepr != TokenTypes::End) {
+         BCR.TypeRepr != TokenTypes::ENDCODE) {
     std::cout << GetDataFromToken();
     BCP++;
     if (!CheckIfAppBCP())
@@ -670,7 +668,24 @@ void outCommand() {
     BCR = ByteCode.at(BCP);
   }
 }
-
+void Handlegotoln() {
+  // called when gotoln token
+  // if expression and valid, do not change the BCP
+  // if no expression or invalid, change the BCP to go to
+  int FallBackBCP = BCP;
+  ++BCP;
+  ByteCodeDT token = ByteCode.at(BCP);
+  if (token.TypeRepr == TokenTypes::BoolExpr)
+    if (OperateBoolExpr())
+      return;
+    else {
+      BCP = std::stoi(ByteCode.at(FallBackBCP).LiteralToken);
+    }
+  else if (token.TypeRepr == TokenTypes::NewLine) {
+    --BCP;
+    BCP = std::stoi(ByteCode.at(BCP).LiteralToken);
+  }
+}
 void setCommand() {
   ++BCP;
   ResolveReadMode(TokenTypes::set);
@@ -684,7 +699,7 @@ void mlcCommand() {
   ResolveReadMode(TokenTypes::set);
   ByteCodeDT BCR = ByteCode.at(BCP);
   while (BCR.TypeRepr != TokenTypes::NewLine &&
-         BCR.TypeRepr != TokenTypes::End) {
+         BCR.TypeRepr != TokenTypes::ENDCODE) {
 
     TokenTypes CurrentTokenType = BCR.TypeRepr;
     switch (CurrentTokenType) {

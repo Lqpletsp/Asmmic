@@ -10,7 +10,7 @@ void InterpretByteCode() {
   if (ByteCode.size() == 0)
     return;
   ByteCodeDT BCR = ByteCode.at(0);
-  while (BCR.TypeRepr != TokenTypes::End) {
+  while (BCR.TypeRepr != TokenTypes::ENDCODE) {
     EnumRepr = BCR.TypeRepr;
     switch (EnumRepr) {
     case TokenTypes::out:
@@ -22,7 +22,8 @@ void InterpretByteCode() {
     case TokenTypes::mlc:
       mlcCommand();
       break;
-    case TokenTypes::rpt:
+    case TokenTypes::gotoln:
+      Handlegotoln();
       break;
     default:
       // std::cout << "NOT READY";
