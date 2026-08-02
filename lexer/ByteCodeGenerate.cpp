@@ -493,8 +493,9 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
               std::to_string(ByteCode.size() + 1);
           // overwrite the start rpt statement to go to line if condition not
           // met
-          ByteCode.push_back(CreateByteCodeToken(
-              std::to_string(RPTStartLine.top()), -1, -1, TokenTypes::gotoln));
+          ByteCode.push_back(
+              CreateByteCodeToken(std::to_string(RPTStartLine.top() - 1), -1,
+                                  -1, TokenTypes::gotoln));
           // add a bytecode to tell the program to go to the start of rpt
           // statement for loop
           RPTStartLine.pop();
