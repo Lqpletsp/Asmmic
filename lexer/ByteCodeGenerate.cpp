@@ -479,6 +479,12 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
         if (LinePointer >= Line.size())
           ShowError(Token, ErrorTypes::InvalidEndStatement);
         Token = Line.at(LinePointer);
+        if (Token.LiteralToken == ".all") {
+          ByteCode.push_back(
+              CreateByteCodeToken("", -1, -1, TokenTypes::ENDCODE));
+          LinePointer++;
+          continue;
+        }
         if (Token.LiteralToken == ".rpt") {
           // assuming the most recent rpt line ended
           if (RPTStartLine.empty())

@@ -567,13 +567,17 @@ void ResolveReadMode(TokenTypes cmd) {
     case TokenTypes::IntVal:
     case TokenTypes::CharVal:
     case TokenTypes::DoubleVal:
-    case TokenTypes::BoolVal: {
+    case TokenTypes::TrueVal:
+    case TokenTypes::FalseVal: {
       if (NoOtherThanInt) {
         if (CurrentTokenType != TokenTypes::IntVal)
           ShowError(BCR, ErrorTypes::GarbageArgInACommand);
         else if (std::stoi(BCR.LiteralToken) < 0)
           ShowError(BCR, ErrorTypes::ZeroOrNegativeMemoryAllocation);
       }
+      if (CurrentTokenType == TokenTypes::TrueVal ||
+          CurrentTokenType == TokenTypes::FalseVal)
+        CurrentTokenType = TokenTypes::BoolVal;
       InsertDataInSB(BCR.LiteralToken, CurrentTokenType);
       AddNullChar();
       break; // Breaks inner switch
