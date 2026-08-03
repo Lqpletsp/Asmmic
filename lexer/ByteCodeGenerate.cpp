@@ -8,38 +8,25 @@
 #include <stack>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace {
 std::unordered_map<std::string, TokenTypes> MapStringAndCommand = {
-    {"clc", TokenTypes::clc},
-    {"inp", TokenTypes::evl},
-    {"set", TokenTypes::set},
-    {"dec", TokenTypes::dec},
-    {"mlc", TokenTypes::mlc},
-    {"and", TokenTypes::And},
-    {"evl", TokenTypes::evl},
-    {"not", TokenTypes::Not},
-    {"out", TokenTypes::out},
-    {"rpt", TokenTypes::rpt},
-    {"end", TokenTypes::end},
-    {"<=", TokenTypes::LessEqual},
-    {">=", TokenTypes::GreaterEqual},
-    {"<", TokenTypes::LessThan},
-    {">", TokenTypes::GreaterThan},
-    {"orr", TokenTypes::Or},
-    {"@", TokenTypes::MemoryAddressIndicator},
-    {"!=", TokenTypes::NotEqual},
-    {"(", TokenTypes::Parenthesis},
-    {")", TokenTypes::Parenthesis},
-    {"+", TokenTypes::Add},
-    {"-", TokenTypes::Min},
-    {"*", TokenTypes::Mlt},
-    {"/", TokenTypes::Div},
-    {":", TokenTypes::Colon},
-    {"]", TokenTypes::Stopper},
-    {"T", TokenTypes::TrueVal},
-    {"F", TokenTypes::FalseVal},
-    {"==", TokenTypes::Equal},
+    {"clc", TokenTypes::clc},       {"inp", TokenTypes::evl},
+    {"set", TokenTypes::set},       {"dec", TokenTypes::dec},
+    {"mlc", TokenTypes::mlc},       {"and", TokenTypes::And},
+    {"evl", TokenTypes::evl},       {"not", TokenTypes::Not},
+    {"out", TokenTypes::out},       {"rpt", TokenTypes::rpt},
+    {"cmp", TokenTypes::cmp},       {"end", TokenTypes::end},
+    {"<=", TokenTypes::LessEqual},  {">=", TokenTypes::GreaterEqual},
+    {"<", TokenTypes::LessThan},    {">", TokenTypes::GreaterThan},
+    {"orr", TokenTypes::Or},        {"@", TokenTypes::MemoryAddressIndicator},
+    {"!=", TokenTypes::NotEqual},   {"(", TokenTypes::Parenthesis},
+    {")", TokenTypes::Parenthesis}, {"+", TokenTypes::Add},
+    {"-", TokenTypes::Min},         {"*", TokenTypes::Mlt},
+    {"/", TokenTypes::Div},         {":", TokenTypes::Colon},
+    {"]", TokenTypes::Stopper},     {"T", TokenTypes::TrueVal},
+    {"F", TokenTypes::FalseVal},    {"==", TokenTypes::Equal},
     {"=", TokenTypes::Equal}};
 
 bool CheckIfCommand(const TokenTypes &EnumTokenVal) {
@@ -51,6 +38,8 @@ bool CheckIfCommand(const TokenTypes &EnumTokenVal) {
   case TokenTypes::mlc:
   case TokenTypes::rpt:
   case TokenTypes::end:
+  case TokenTypes::cmp:
+
     return true;
   default:
     return false;
@@ -428,6 +417,8 @@ int HandleShuntingYard(const TokenizedLineDT &Line, const std::string &cmd) {
 void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
   ByteCodeDT ByteCodeReprOfTokens;
   std::stack<int> RPTStartLine;
+  std::stack<int> CMPStartLine;
+  std::vector<int> CMPBlockCodeFinish;
   for (size_t i = 0; i < TokenizedCode.size(); ++i) {
     TokenizedLineDT Line = TokenizedCode.at(i);
     if (Line.size() == 0)
@@ -467,6 +458,27 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
         LinePointer += iteration;
         continue;
 
+      } else if (TypeOfToken == TokenTypes::cmp) {
+        if (CMPStartLine.empty()) {
+          CMPStartLine.push(ByteCode.size());
+          ByteCode.push_back(CreateByteCodeToken(
+              "", -1, -1,
+              TokenTypes::gotoln)); // will be replaced when "end .rpt" line
+          LinePointer++;
+          continue;
+        } else {
+          ByteCode.at(CMPStartLine.top()).LiteralToken =
+              std::to_string(ByteCode.size() - 1);
+          CMPStartLine.pop();
+          // to skip past other cmp statements before end .cmp if the code block
+          // is executed
+          ByteCode.push_back(
+              CreateByteCodeToken("", -1, -1, TokenTypes::gotoln));
+          CMPBlockCodeFinish.push_back(ByteCode.size() - 1);
+          CMPStartLine.push(ByteCode.size());
+          ByteCode.push_back(
+              CreateByteCodeToken("", -1, -1, TokenTypes::gotoln));
+        }
       } else if (TypeOfToken == TokenTypes::rpt) {
         RPTStartLine.push(ByteCode.size());
         ByteCode.push_back(CreateByteCodeToken(
@@ -479,13 +491,25 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
         if (LinePointer >= Line.size())
           ShowError(Token, ErrorTypes::InvalidEndStatement);
         Token = Line.at(LinePointer);
+        if (Token.LiteralToken == ".cmp") {
+          if (CMPStartLine.size() > 1)
+            ShowError(Token, ErrorTypes::PastCMPstatementsStartedbutNotEnded);
+          ByteCode.at(CMPStartLine.top()).LiteralToken =
+              std::to_string(ByteCode.size());
+          while (!CMPBlockCodeFinish.empty()) {
+            ByteCode.at(CMPBlockCodeFinish.back()).LiteralToken =
+                std::to_string(ByteCode.size());
+            ByteCode.pop_back();
+          }
+          LinePointer++;
+          continue;
+        }
         if (Token.LiteralToken == ".all") {
           ByteCode.push_back(
               CreateByteCodeToken("", -1, -1, TokenTypes::ENDCODE));
           LinePointer++;
           continue;
-        }
-        if (Token.LiteralToken == ".rpt") {
+        } else if (Token.LiteralToken == ".rpt") {
           // assuming the most recent rpt line ended
           if (RPTStartLine.empty())
             ShowError(Token, ErrorTypes::endrptStatementGivenButNotStarted);

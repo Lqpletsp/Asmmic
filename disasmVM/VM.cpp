@@ -1,4 +1,5 @@
 #include "VM.h"
+#include "../errorhandling/ErrorHandler.h"
 #include "../main/types.h"
 #include "HandleCommands/Commands.h"
 #include <iostream>
@@ -26,7 +27,7 @@ void InterpretByteCode() {
       Handlegotoln();
       break;
     default:
-      // std::cout << "NOT READY";
+      ShowError(BCR, ErrorTypes::GarbageArgInACommand);
       break;
     }
     BCP++;

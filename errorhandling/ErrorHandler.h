@@ -35,7 +35,7 @@ enum class ErrorTypes {
   rptStatementBegunButNotEnded,
   InvalidEndStatement,
   endrptStatementGivenButNotStarted,
-
+  PastCMPstatementsStartedbutNotEnded
 };
 
 inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
@@ -94,6 +94,8 @@ inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
     {ErrorTypes::InvalidEndStatement, "end takes a single argument that is a "
                                       "dependent command but was not given"},
     {ErrorTypes::endrptStatementGivenButNotStarted,
-     "rpt statement tried to end but was not started"}};
+     "rpt statement tried to end but was not started"},
+    {ErrorTypes::PastCMPstatementsStartedbutNotEnded,
+     "Older cmp branches were begun but were not ended"}};
 void ShowError(const TokenDT &Token, const ErrorTypes &Type);
 void ShowError(const ByteCodeDT &Token, const ErrorTypes &Type);

@@ -1,3 +1,15 @@
-rpt .evl T; 
-  out "Hello"; 
-end .rpt;
+cmp .evl x < 10; 
+  out "Done"; 
+cmp .evl x > 10; 
+  out "Done2"; 
+cmp .evl x == 10; 
+  out "Done3"; 
+end .cmp; 
+
+
+gotoln boolexpr ... boolexprend 
+... 
+gotoln
+gotln boolexpr ... boolexprend
+... 
+gotoln

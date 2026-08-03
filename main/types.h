@@ -71,6 +71,7 @@ enum class TokenTypes {
   gotoln,
   rpt, // loop
   end,
+  cmp,
   // symbols
   Colon,   //":"
   Stopper, // "]"
@@ -95,7 +96,7 @@ inline std::string MAINCODE = R"(
   set 0 : x; 
   rpt .evl x < 10]; 
   out x; 
-  set .clc x + 1] : x; 
+  set .clc x + 1]: x; 
   end .rpt;
  )";
 
