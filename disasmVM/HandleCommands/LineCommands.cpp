@@ -685,7 +685,7 @@ void Handlegotoln() {
     else {
       BCP = std::stoi(ByteCode.at(FallBackBCP).LiteralToken);
     }
-  else if (token.TypeRepr == TokenTypes::NewLine) {
+  else {
     --BCP;
     BCP = std::stoi(ByteCode.at(BCP).LiteralToken);
   }

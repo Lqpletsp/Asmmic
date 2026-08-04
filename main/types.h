@@ -91,9 +91,28 @@ struct VariableDT {
 };
 // THIS IS THE MAIN CODE!!!
 inline std::string MAINCODE = R"(
-  cmp .evl T; 
-  cmp .evl T; 
+  dec .mem 100; 
+  dec .var ~i Number; 
+  set 11 : Number; 
+  
+  cmp .evl Number < 10; 
+    out "Less than 10"; 
+  cmp .evl Number > 10; 
+    out "Greater than 10"; 
+  cmp; 
+    out "is 10"; 
   end .cmp; 
+  
+  set 10 : Number; 
+
+  cmp .evl Number < 10; 
+    out "Less than 10"; 
+  cmp .evl Number > 10; 
+    out "Greater than 10"; 
+  cmp; 
+    out "is 10"; 
+  end .cmp; 
+  
  )";
 
 inline std::vector<ByteCodeDT> ByteCode;

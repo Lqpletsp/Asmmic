@@ -433,7 +433,6 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
     int LinePointer = 0;
     while (LinePointer < Line.size()) {
       TokenDT Token = Line.at(LinePointer);
-      std::cout << Token.LiteralToken << std::endl;
       TokenTypes TypeOfToken = DetermineType(Token.LiteralToken);
       int LiN = Token.LineNum, CoN = Token.ColNum;
       if (TypeOfToken == TokenTypes::Unknown)
@@ -469,7 +468,7 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
           continue;
         } else {
           ByteCode.at(CMPStartLine.top()).LiteralToken =
-              std::to_string(ByteCode.size() - 1);
+              std::to_string(ByteCode.size());
           CMPStartLine.pop();
           // to skip past other cmp statements before end .cmp if the code block
           // is executed
@@ -479,6 +478,14 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
           CMPStartLine.push(ByteCode.size());
           ByteCode.push_back(
               CreateByteCodeToken("", -1, -1, TokenTypes::gotoln));
+          if (Line.size() == 1) {
+            ByteCode.push_back(
+                CreateByteCodeToken("", -1, -1, TokenTypes::BoolExpr));
+            ByteCode.push_back(
+                CreateByteCodeToken("T", -1, -1, TokenTypes::TrueVal));
+            ByteCode.push_back(
+                CreateByteCodeToken("", -1, -1, TokenTypes::BoolExprEnd));
+          }
           LinePointer++;
           continue;
         }
@@ -500,11 +507,13 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
           ByteCode.at(CMPStartLine.top()).LiteralToken =
               std::to_string(ByteCode.size());
           while (!CMPBlockCodeFinish.empty()) {
-            std::cout << CMPBlockCodeFinish.back() << std::endl;
             ByteCode.at(CMPBlockCodeFinish.back()).LiteralToken =
                 std::to_string(ByteCode.size());
             CMPBlockCodeFinish.pop_back();
           }
+          CMPBlockCodeFinish.clear();
+          CMPStartLine = std::stack<int>();
+
           LinePointer++;
           continue;
         }

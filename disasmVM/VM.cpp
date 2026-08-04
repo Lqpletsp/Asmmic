@@ -29,6 +29,7 @@ void InterpretByteCode() {
     case TokenTypes::NewLine:
       break;
     default:
+      std::cout << static_cast<int>(EnumRepr);
       ShowError(BCR, ErrorTypes::GarbageArgInACommand);
       break;
     }
