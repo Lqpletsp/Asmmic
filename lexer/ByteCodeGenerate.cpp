@@ -433,6 +433,7 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
     int LinePointer = 0;
     while (LinePointer < Line.size()) {
       TokenDT Token = Line.at(LinePointer);
+      std::cout << Token.LiteralToken << std::endl;
       TokenTypes TypeOfToken = DetermineType(Token.LiteralToken);
       int LiN = Token.LineNum, CoN = Token.ColNum;
       if (TypeOfToken == TokenTypes::Unknown)
@@ -478,6 +479,8 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
           CMPStartLine.push(ByteCode.size());
           ByteCode.push_back(
               CreateByteCodeToken("", -1, -1, TokenTypes::gotoln));
+          LinePointer++;
+          continue;
         }
       } else if (TypeOfToken == TokenTypes::rpt) {
         RPTStartLine.push(ByteCode.size());
@@ -497,9 +500,10 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
           ByteCode.at(CMPStartLine.top()).LiteralToken =
               std::to_string(ByteCode.size());
           while (!CMPBlockCodeFinish.empty()) {
+            std::cout << CMPBlockCodeFinish.back() << std::endl;
             ByteCode.at(CMPBlockCodeFinish.back()).LiteralToken =
                 std::to_string(ByteCode.size());
-            ByteCode.pop_back();
+            CMPBlockCodeFinish.pop_back();
           }
           LinePointer++;
           continue;

@@ -26,6 +26,8 @@ void InterpretByteCode() {
     case TokenTypes::gotoln:
       Handlegotoln();
       break;
+    case TokenTypes::NewLine:
+      break;
     default:
       ShowError(BCR, ErrorTypes::GarbageArgInACommand);
       break;
