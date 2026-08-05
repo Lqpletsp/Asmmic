@@ -11,6 +11,11 @@
 #include <vector>
 
 namespace {
+
+bool IsMathOperator(TokenTypes &type) {
+  return type == TokenTypes::Add || type == TokenTypes::Min ||
+         type == TokenTypes::Mlt || type == TokenTypes::Div;
+};
 std::unordered_map<std::string, TokenTypes> MapStringAndCommand = {
     {"clc", TokenTypes::clc},       {"inp", TokenTypes::evl},
     {"set", TokenTypes::set},       {"dec", TokenTypes::dec},
@@ -419,6 +424,7 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
   std::stack<int> RPTStartLine;
   std::stack<int> CMPStartLine;
   std::vector<int> CMPBlockCodeFinish;
+
   for (size_t i = 0; i < TokenizedCode.size(); ++i) {
     TokenizedLineDT Line = TokenizedCode.at(i);
     if (Line.size() == 0)
@@ -459,6 +465,7 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
         continue;
 
       } else if (TypeOfToken == TokenTypes::cmp) {
+
         if (CMPStartLine.empty()) {
           CMPStartLine.push(ByteCode.size());
           ByteCode.push_back(CreateByteCodeToken(
@@ -489,6 +496,22 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
           LinePointer++;
           continue;
         }
+      } else if (TypeOfToken == TokenTypes::Add ||
+                 TypeOfToken == TokenTypes::Min) {
+        LinePointer++;
+        if (LinePointer >= Line.size())
+          break;
+        TokenTypes type = DetermineType(Line.at(LinePointer).LiteralToken);
+        if (type == TokenTypes::DoubleVal || type == TokenTypes::IntVal) {
+          Token = Line.at(LinePointer);
+          Token.LiteralToken =
+              Line.at(LinePointer - 1).LiteralToken + Token.LiteralToken;
+          LiN = Token.LineNum;
+          CoN = Token.ColNum;
+          LiteralString = Token.LiteralToken;
+          TypeOfToken = type;
+        }
+
       } else if (TypeOfToken == TokenTypes::rpt) {
         RPTStartLine.push(ByteCode.size());
         ByteCode.push_back(CreateByteCodeToken(
