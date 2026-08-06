@@ -32,7 +32,8 @@ std::unordered_map<std::string, TokenTypes> MapStringAndCommand = {
     {"/", TokenTypes::Div},         {":", TokenTypes::Colon},
     {"]", TokenTypes::Stopper},     {"T", TokenTypes::TrueVal},
     {"F", TokenTypes::FalseVal},    {"==", TokenTypes::Equal},
-    {"=", TokenTypes::Equal}};
+    {"=", TokenTypes::Equal},       {"elf", TokenTypes::elf},
+    {"ele", TokenTypes::ele}};
 
 bool CheckIfCommand(const TokenTypes &EnumTokenVal) {
   switch (EnumTokenVal) {
@@ -44,6 +45,8 @@ bool CheckIfCommand(const TokenTypes &EnumTokenVal) {
   case TokenTypes::rpt:
   case TokenTypes::end:
   case TokenTypes::cmp:
+  case TokenTypes::ele:
+  case TokenTypes::elf:
 
     return true;
   default:
@@ -424,6 +427,8 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
   std::stack<int> RPTStartLine;
   std::stack<int> CMPStartLine;
   std::vector<int> CMPBlockCodeFinish;
+  std::stack<std::stack<int>> CMPStartLineBack;
+  std::stack<std::vector<int>> CMPBlockCodeFinishBack;
 
   for (size_t i = 0; i < TokenizedCode.size(); ++i) {
     TokenizedLineDT Line = TokenizedCode.at(i);
@@ -474,28 +479,58 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
           LinePointer++;
           continue;
         } else {
-          ByteCode.at(CMPStartLine.top()).LiteralToken =
-              std::to_string(ByteCode.size());
-          CMPStartLine.pop();
-          // to skip past other cmp statements before end .cmp if the code block
-          // is executed
-          ByteCode.push_back(
-              CreateByteCodeToken("", -1, -1, TokenTypes::gotoln));
-          CMPBlockCodeFinish.push_back(ByteCode.size() - 1);
+          // starts new branch
+          CMPBlockCodeFinishBack.push(CMPBlockCodeFinish);
+          CMPStartLineBack.push(CMPStartLine);
+          CMPBlockCodeFinish = std::vector<int>();
+          CMPStartLine = std::stack<int>();
           CMPStartLine.push(ByteCode.size());
-          ByteCode.push_back(
-              CreateByteCodeToken("", -1, -1, TokenTypes::gotoln));
-          if (Line.size() == 1) {
-            ByteCode.push_back(
-                CreateByteCodeToken("", -1, -1, TokenTypes::BoolExpr));
-            ByteCode.push_back(
-                CreateByteCodeToken("T", -1, -1, TokenTypes::TrueVal));
-            ByteCode.push_back(
-                CreateByteCodeToken("", -1, -1, TokenTypes::BoolExprEnd));
-          }
+          ByteCode.push_back(CreateByteCodeToken(
+              "", -1, -1,
+              TokenTypes::gotoln)); // will be replaced when "end .rpt" line
           LinePointer++;
           continue;
         }
+      } else if (TypeOfToken == TokenTypes::elf) {
+        if (CMPStartLine.empty())
+          ShowError(Token, ErrorTypes::IndependentelfCommand);
+        ByteCode.at(CMPStartLine.top()).LiteralToken =
+            std::to_string(ByteCode.size());
+        CMPStartLine.pop();
+        // to skip past other cmp statements before end .cmp if the code block
+        // is executed
+        ByteCode.push_back(CreateByteCodeToken("", -1, -1, TokenTypes::gotoln));
+        CMPBlockCodeFinish.push_back(ByteCode.size() - 1);
+        CMPStartLine.push(ByteCode.size());
+        ByteCode.push_back(CreateByteCodeToken("", -1, -1, TokenTypes::gotoln));
+        LinePointer++;
+        continue;
+      } else if (TypeOfToken == TokenTypes::ele) {
+        if (CMPStartLine.empty())
+          ShowError(Token, ErrorTypes::IndependenteleCommand);
+        ByteCode.at(CMPStartLine.top()).LiteralToken =
+            std::to_string(ByteCode.size());
+        CMPStartLine.pop();
+        LinePointer++;
+        if (Line.size() < LinePointer)
+          ShowError(Line.at(LinePointer - 1),
+                    ErrorTypes::ArgForeleCommand); // to skip past other cmp
+                                                   // statements before end .cmp
+                                                   // if the code block
+        // is executed
+        ByteCode.push_back(CreateByteCodeToken("", -1, -1, TokenTypes::gotoln));
+        CMPBlockCodeFinish.push_back(ByteCode.size() - 1);
+        CMPStartLine.push(ByteCode.size());
+        ByteCode.push_back(CreateByteCodeToken("", -1, -1, TokenTypes::gotoln));
+        if (Line.size() == 1) {
+          ByteCode.push_back(
+              CreateByteCodeToken("", -1, -1, TokenTypes::BoolExpr));
+          ByteCode.push_back(
+              CreateByteCodeToken("T", -1, -1, TokenTypes::TrueVal));
+          ByteCode.push_back(
+              CreateByteCodeToken("", -1, -1, TokenTypes::BoolExprEnd));
+        }
+        break;
       } else if (TypeOfToken == TokenTypes::Add ||
                  TypeOfToken == TokenTypes::Min) {
         LinePointer++;
@@ -511,7 +546,6 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
           LiteralString = Token.LiteralToken;
           TypeOfToken = type;
         }
-
       } else if (TypeOfToken == TokenTypes::rpt) {
         RPTStartLine.push(ByteCode.size());
         ByteCode.push_back(CreateByteCodeToken(
@@ -529,13 +563,20 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
             ShowError(Token, ErrorTypes::PastCMPstatementsStartedbutNotEnded);
           ByteCode.at(CMPStartLine.top()).LiteralToken =
               std::to_string(ByteCode.size());
+          if (CMPBlockCodeFinish.empty())
+            ShowError(Token, ErrorTypes::CMPstatementendedbutnotstarted);
           while (!CMPBlockCodeFinish.empty()) {
             ByteCode.at(CMPBlockCodeFinish.back()).LiteralToken =
                 std::to_string(ByteCode.size());
             CMPBlockCodeFinish.pop_back();
           }
-          CMPBlockCodeFinish.clear();
-          CMPStartLine = std::stack<int>();
+          if (!(CMPStartLineBack.empty() && CMPBlockCodeFinishBack.empty())) {
+            CMPBlockCodeFinish = CMPBlockCodeFinishBack.top();
+            CMPStartLine = CMPStartLineBack.top();
+            CMPBlockCodeFinishBack.pop();
+            CMPStartLineBack.pop();
+          } else
+            CMPStartLine = std::stack<int>();
 
           LinePointer++;
           continue;
