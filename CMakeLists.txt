@@ -8,19 +8,19 @@ set(SOURCES
     # main folder
     main/main.cpp
     main/ImportantInternalFunctions.cpp
-    
+
     # errorhandling folder
     errorhandling/ErrorHandler.cpp
-    
+
     # lexer folder
     lexer/ByteCodeGenerate.cpp
     lexer/Declarators.cpp
     lexer/Tokenizer.cpp
-    
+
     # disasmVM folder
-    disasmVM/VM.cpp
-    disasmVM/HandleCommands/LineCommands.cpp
-    disasmVM/HandleCommands/MidLineCommands.cpp
+    IRinterpreter/VM.cpp
+    IRinterpreter/HandleCommands/LineCommands.cpp
+    IRinterpreter/HandleCommands/MidLineCommands.cpp
 )
 
 add_executable(DisasmImprov2 ${SOURCES})
@@ -29,6 +29,6 @@ target_include_directories(DisasmImprov2 PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/main
     ${CMAKE_CURRENT_SOURCE_DIR}/errorhandling
     ${CMAKE_CURRENT_SOURCE_DIR}/lexer
-    ${CMAKE_CURRENT_SOURCE_DIR}/disasmVM
-    ${CMAKE_CURRENT_SOURCE_DIR}/disasmVM/HandleCommands
+    ${CMAKE_CURRENT_SOURCE_DIR}/IRinterpreter
+    ${CMAKE_CURRENT_SOURCE_DIR}/IRinterpreter/HandleCommands
 )
