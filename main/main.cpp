@@ -1,4 +1,4 @@
-#include "../disasmVM/VM.h"
+#include "../IRinterpreter/VM.h"
 #include "../lexer/lexer.h"
 #include "types.h"
 #include <iostream>

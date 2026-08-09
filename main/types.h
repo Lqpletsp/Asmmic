@@ -97,23 +97,7 @@ inline std::string MAINCODE = R"(
   dec .mem 100; 
   dec .var ~i Number;
   set 10 : Number; 
-
-  cmp .evl Number == 10; 
-    out "10"; 
-    set 11 : Number; 
-    cmp .evl Number > 10; 
-      out ~n ">10"; 
-    ele; 
-      out ~n "<10";
-    end .cmp; 
-  elf .evl Number > 10; 
-    out ">10"; 
-  ele; 
-    out "<10"; 
-  end .cmp; 
-
- 
-
+  out Number; 
 )";
 
 inline std::vector<ByteCodeDT> ByteCode;

@@ -1,7 +1,7 @@
-#include "../../errorhandling/ErrorHandler.h"
-#include "../../main/ImportantInternalFunctions.h"
-#include "../../main/types.h"
-#include "../VM.h"
+#include "../errorhandling/ErrorHandler.h"
+#include "../main/ImportantInternalFunctions.h"
+#include "../main/types.h"
+#include "VM.h"
 #include <iostream>
 #include <stack>
 #include <string>

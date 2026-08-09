@@ -1,7 +1,7 @@
 #include "VM.h"
 #include "../errorhandling/ErrorHandler.h"
 #include "../main/types.h"
-#include "HandleCommands/Commands.h"
+#include "ExecuteCommands.h"
 #include <iostream>
 #include <vector>
 
