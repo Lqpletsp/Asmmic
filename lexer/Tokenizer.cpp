@@ -77,7 +77,8 @@ TokenizedCodeDT TokenizeCode(const std::string &MAINCODE) {
       } else if (ch == ' ' || ch == '\t' || ch == '*' || ch == '@' ||
                  ch == ':' || ch == '+' || ch == '-' || ch == '/' ||
                  ch == ']' || ch == ',' || ch == '&' || ch == '(' ||
-                 ch == ')' || ch == '>' || ch == '<' || ch == '=') {
+                 ch == ')' || ch == '>' || ch == '<' || ch == '=' ||
+                 ch == '.') {
 
         // Flush existing word token
         if (!CurrentToken.empty()) {

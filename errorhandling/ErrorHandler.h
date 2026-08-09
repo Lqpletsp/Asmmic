@@ -40,6 +40,8 @@ enum class ErrorTypes {
   ArgForeleCommand,
   IndependenteleCommand,
   IndependentelfCommand,
+  MidLineCommandIndicationForInvalidToken,
+  ExpectedAValidMidLineCommand,
 };
 
 inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
@@ -108,6 +110,12 @@ inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
     {ErrorTypes::IndependenteleCommand,
      "ele command expects a cmp branch but a cmp statement was not started"},
     {ErrorTypes::IndependentelfCommand,
-     "elf command expects a cmp branch but a cmp statement was not started"}};
+     "elf command expects a cmp branch but a cmp statement was not started"},
+    {ErrorTypes::MidLineCommandIndicationForInvalidToken,
+     "'.' can only be used to indicate a valid mid line command but no mid "
+     "line command was given"},
+    {ErrorTypes::ExpectedAValidMidLineCommand,
+     "The line command expects a valid mid-line command but was not given"},
+};
 void ShowError(const TokenDT &Token, const ErrorTypes &Type);
 void ShowError(const ByteCodeDT &Token, const ErrorTypes &Type);
