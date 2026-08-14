@@ -1,15 +1,5 @@
-cmp .evl x < 10; 
-  out "Done"; 
-cmp .evl x > 10; 
-  out "Done2"; 
-cmp .evl x == 10; 
-  out "Done3"; 
-end .cmp; 
+dec mem 100; 
 
 
-gotoln boolexpr ... boolexprend 
-... 
-gotoln
-gotln boolexpr ... boolexprend
-... 
-gotoln
+set "Hello world" : ; 
+out :

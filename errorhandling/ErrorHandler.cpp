@@ -82,7 +82,7 @@ void ShowError(const ByteCodeDT &Token, const ErrorTypes &Type) {
   std::string BadToken;
   if (Token.TypeRepr == TokenTypes::VariableID) {
     bool found = false;
-    for (const auto &pair : MapVariableNameAndID) {
+    for (const auto &pair : *c_MapVariableNameAndID) {
       if (pair.second == std::stoi(Token.LiteralToken)) {
         BadToken = pair.first;
         found = true;
@@ -103,8 +103,8 @@ void ShowError(const ByteCodeDT &Token, const ErrorTypes &Type) {
     // BadToken = ErrLine.at(ErrCol);
     std::cout << std::string(BadToken.size(), '^') << "\n\n";
   }
-  if (Token.LiteralToken == "")
-    std::cout << "Err[ln:" << ErrLineNum << "]: " << std::endl;
+  if (Token.LiteralToken == "" || Type == ErrorTypes::MemoryFull)
+    std::cout << "Err[ln:" << ErrLineNum << "]: ";
   else
     std::cout << "Err[ln:" << ErrLineNum << "]: " << '"' + BadToken + '"'
               << " was given.\n";

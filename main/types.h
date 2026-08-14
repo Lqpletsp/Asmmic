@@ -97,7 +97,8 @@ inline std::string MAINCODE = R"(
   dec mem 100; 
   dec var ~i Number; 
   set 10 : Number; 
-  out Number;
+  out Number; 
+
 )";
 
 inline std::vector<ByteCodeDT> ByteCode;
@@ -108,6 +109,11 @@ struct RawDataRepr {
   std::string Data;
   TokenTypes DataType;
 };
+struct ModuleDT {
+  int ModuleID;
+  std::vector<VariableDT> Parameters;
+};
+inline int CurrentModuleID = 0;
 inline int VarCount = 0;
 // when looking for identifiers inside a module, it first checks for local sand
 // box memory and then the global
@@ -116,6 +122,16 @@ inline int TotalMemSize;
 inline std::stack<int> g_TotalMemPool;
 inline std::unordered_map<int, VariableDT> g_VariableTable; // global
 inline std::unordered_map<int, VariableDT> l_VariableTable; // local
+inline std::unordered_map<int, VariableDT> *c_VariableTable = &g_VariableTable;
+inline std::unordered_map<int, ModuleDT> ModuleTable;
 inline std::vector<RawDataRepr> SBMemory; // Where the actual data lies
-inline std::unordered_map<std::string, int> MapVariableNameAndID;
+inline std::unordered_map<std::string, int> g_MapVariableNameAndID;
+inline std::unordered_map<std::string, int> l_MapVariableNameAndID;
+inline std::unordered_map<std::string, int> *c_MapVariableNameAndID =
+    &g_MapVariableNameAndID;
+
+inline std::unordered_map<std::string, int> MapModuleNameAndID;
+inline std::unordered_map<int, std::unordered_map<int, VariableDT>>
+    LocalModuleVariableTable;
+inline std::stack<int> ModuleStack;
 inline int CurrentVariableID = 0;

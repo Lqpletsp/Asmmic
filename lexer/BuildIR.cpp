@@ -15,25 +15,42 @@ namespace {
 bool IsMathOperator(TokenTypes &type) {
   return type == TokenTypes::Add || type == TokenTypes::Min ||
          type == TokenTypes::Mlt || type == TokenTypes::Div;
-};
+}
+
 std::unordered_map<std::string, TokenTypes> MapStringAndCommand = {
-    {"clc", TokenTypes::clc},       {"evl", TokenTypes::evl},
-    {"set", TokenTypes::set},       {"dec", TokenTypes::dec},
-    {"mlc", TokenTypes::mlc},       {"and", TokenTypes::And},
-    {"evl", TokenTypes::evl},       {"not", TokenTypes::Not},
-    {"out", TokenTypes::out},       {"rpt", TokenTypes::rpt},
-    {"cmp", TokenTypes::cmp},       {"end", TokenTypes::end},
-    {"<=", TokenTypes::LessEqual},  {">=", TokenTypes::GreaterEqual},
-    {"<", TokenTypes::LessThan},    {">", TokenTypes::GreaterThan},
-    {"orr", TokenTypes::Or},        {"@", TokenTypes::MemoryAddressIndicator},
-    {"!=", TokenTypes::NotEqual},   {"(", TokenTypes::Parenthesis},
-    {")", TokenTypes::Parenthesis}, {"+", TokenTypes::Add},
-    {"-", TokenTypes::Min},         {"*", TokenTypes::Mlt},
-    {"/", TokenTypes::Div},         {":", TokenTypes::Colon},
-    {"]", TokenTypes::Stopper},     {"T", TokenTypes::TrueVal},
-    {"F", TokenTypes::FalseVal},    {"==", TokenTypes::Equal},
-    {"=", TokenTypes::Equal},       {"elf", TokenTypes::elf},
-    {"ele", TokenTypes::ele},       {".", TokenTypes::Period}};
+    {"clc", TokenTypes::clc},
+    {"evl", TokenTypes::evl},
+    {"set", TokenTypes::set},
+    {"dec", TokenTypes::dec},
+    {"mlc", TokenTypes::mlc},
+    {"and", TokenTypes::And},
+    {"not", TokenTypes::Not},
+    {"out", TokenTypes::out},
+    {"rpt", TokenTypes::rpt},
+    {"cmp", TokenTypes::cmp},
+    {"end", TokenTypes::end},
+    {"<=", TokenTypes::LessEqual},
+    {">=", TokenTypes::GreaterEqual},
+    {"<", TokenTypes::LessThan},
+    {">", TokenTypes::GreaterThan},
+    {"orr", TokenTypes::Or},
+    {"@", TokenTypes::MemoryAddressIndicator},
+    {"!=", TokenTypes::NotEqual},
+    {"(", TokenTypes::Parenthesis},
+    {")", TokenTypes::Parenthesis},
+    {"+", TokenTypes::Add},
+    {"-", TokenTypes::Min},
+    {"*", TokenTypes::Mlt},
+    {"/", TokenTypes::Div},
+    {":", TokenTypes::Colon},
+    {"]", TokenTypes::Stopper},
+    {"T", TokenTypes::TrueVal},
+    {"F", TokenTypes::FalseVal},
+    {"==", TokenTypes::Equal},
+    {"=", TokenTypes::Equal},
+    {"elf", TokenTypes::elf},
+    {"ele", TokenTypes::ele},
+    {".", TokenTypes::Period}};
 
 bool CheckIfCommand(const TokenTypes &EnumTokenVal) {
   switch (EnumTokenVal) {
@@ -47,7 +64,6 @@ bool CheckIfCommand(const TokenTypes &EnumTokenVal) {
   case TokenTypes::cmp:
   case TokenTypes::ele:
   case TokenTypes::elf:
-
     return true;
   default:
     return false;
@@ -83,14 +99,15 @@ TokenTypes DetermineType(const std::string &Token) {
   std::string SingleToken = Token;
   if (Token.front() == '.') {
     SingleToken = SliceStuff(1, Token.size() - 1, Token);
-    return (!CheckIfMidLineCommand(MapStringAndCommand[SingleToken]))
-               ? TokenTypes::Unknown
-               : MapStringAndCommand[SingleToken];
-  } else {
-    SingleToken = Token;
+    auto it = MapStringAndCommand.find(SingleToken);
+    if (it != MapStringAndCommand.end() && CheckIfMidLineCommand(it->second)) {
+      return it->second;
+    }
+    return TokenTypes::Unknown;
   }
 
-  if (MapStringAndCommand.find(SingleToken) == MapStringAndCommand.end()) {
+  auto it = MapStringAndCommand.find(SingleToken);
+  if (it == MapStringAndCommand.end()) {
     if (Token.front() == '~')
       return TokenTypes::Flag;
     else if ((Token.front() == '"' && Token.back() == '"') ||
@@ -102,7 +119,7 @@ TokenTypes DetermineType(const std::string &Token) {
       return TokenTypes::Identifier; // identifier
     return TokenTypes::Unknown;      // garbage token
   }
-  return MapStringAndCommand[SingleToken];
+  return it->second;
 }
 
 ByteCodeDT CreateByteCodeToken(const std::string &LT, const int &LN,
@@ -120,7 +137,7 @@ std::string GetStrVariableID(const std::string &VariableName) {
   if (VariableID < 0 || !CheckIfValidGlobalVariable(VariableID))
     return "!"; // means the variable does not exist
   std::stringstream ss;
-  ss << std::fixed << MapVariableNameAndID[VariableName];
+  ss << std::fixed << (*c_MapVariableNameAndID)[VariableName];
   return ss.str();
 }
 
@@ -162,19 +179,20 @@ template <typename T> int HandleVariables(const T &Line, TokenDT &Token) {
         break;
       }
       case TokenTypes::Identifier: {
-        std::string VarName = GetStrVariableID(Token.LiteralToken);
-        int VariableID = MapVariableNameAndID[Token.LiteralToken];
-        if (VariableID < 0 || !CheckIfValidGlobalVariable(VariableID))
+        std::string ElemVarName = GetStrVariableID(Token.LiteralToken);
+        int ElemVariableID = (*c_MapVariableNameAndID)[Token.LiteralToken];
+        if (ElemVariableID < 0 || !CheckIfValidGlobalVariable(ElemVariableID))
           ShowError(Token, ErrorTypes::IdentifierNotFound);
-        VariableDT &VariableMetaData = *GetVariableMetaData(VariableID);
-        if (VariableMetaData.DataType != TokenTypes::IntVal)
+        VariableDT &ElemVariableMetaData = *GetVariableMetaData(ElemVariableID);
+        if (ElemVariableMetaData.DataType != TokenTypes::IntVal)
           ShowError(Token, ErrorTypes::NoIntArrayAddress);
-        else if (VariableMetaData.Array) {
+        else if (ElemVariableMetaData.Array) {
           ByteCode.push_back(CreateByteCodeToken(
-              VarName, Token.LineNum, Token.ColNum, TokenTypes::ArrayHint));
+              ElemVarName, Token.LineNum, Token.ColNum, TokenTypes::ArrayHint));
         } else {
-          ByteCode.push_back(CreateByteCodeToken(
-              VarName, Token.LineNum, Token.ColNum, TokenTypes::VariableID));
+          ByteCode.push_back(CreateByteCodeToken(ElemVarName, Token.LineNum,
+                                                 Token.ColNum,
+                                                 TokenTypes::VariableID));
           ArrayStEnd = true;
         }
         break;
@@ -375,7 +393,6 @@ int HandleShuntingYard(const TokenizedLineDT &Line, const std::string &cmd) {
     int LiN = Token.LineNum, CoN = Token.ColNum;
 
     switch (TypeOfToken) {
-    // --- ADDED TrueVal and FalseVal HERE ---
     case TokenTypes::TrueVal:
     case TokenTypes::FalseVal:
     case TokenTypes::IntVal:
@@ -430,9 +447,8 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
   std::stack<std::stack<int>> CMPStartLineBack;
   std::stack<std::vector<int>> CMPBlockCodeFinishBack;
 
-  for (size_t i = 0; i < TokenizedCode.size(); ++i) {
-    TokenizedLineDT Line = TokenizedCode.at(i);
-    if (Line.size() == 0)
+  for (const auto &Line : TokenizedCode) {
+    if (Line.empty())
       continue;
     else if (!CheckIfCommand(DetermineType(Line.at(0).LiteralToken))) {
       ShowError(Line.at(0), ErrorTypes::NoCommandInFrontofLine);

@@ -14,8 +14,10 @@ void PrintDetails() {
 
 int main() {
   HandleLexer();
+
   std::cout << "________________________\n" << std::endl;
   InterpretByteCode();
+
   std::cout << "\n_________________________\n" << std::endl;
   PrintDetails();
   return 0;

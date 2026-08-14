@@ -52,7 +52,7 @@ bool CheckIfValidGlobalVariable(
 }
 
 VariableDT *GetVariableMetaData(const int &VariableID) {
-  return &g_VariableTable[VariableID];
+  return &(*c_VariableTable)[VariableID];
 }
 
 std::string GetDataFromAddress(const std::string &StrAddress) {
@@ -73,9 +73,14 @@ int GetVariableID() {
   return (CurrentVariableID - 1);
 }
 
+int GetModuleID() {
+  CurrentModuleID++;
+  return (CurrentModuleID - 1);
+}
+
 int GetAssignedVariableID(const std::string &VariableName) {
-  auto it = MapVariableNameAndID.find(VariableName);
-  if (it == MapVariableNameAndID.end()) {
+  auto it = (*c_MapVariableNameAndID).find(VariableName);
+  if (it == (*c_MapVariableNameAndID).end()) {
     return -1; // Or whatever sentinel value you use for "not found"
   }
   return it->second; // Return the actual ID stored in the map

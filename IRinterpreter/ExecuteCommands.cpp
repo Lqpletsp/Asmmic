@@ -11,7 +11,8 @@
 namespace {
 double OperateMathExpr();
 bool OperateBoolExpr();
-
+void AddNullChar();
+std::pair<std::string, TokenTypes> GetDataFromToken();
 bool CheckIfAppBCP() { return (BCP + 1 >= ByteCode.size()) ? false : true; }
 
 int AllocateSBmemory() {
@@ -46,6 +47,27 @@ void InsertDataInSB(const T &DataToStore, const TokenTypes &DataType) {
   SBMemory.at(MemoryAddressToStore).DataType = DataType;
   SBMemory.at(MemoryAddressToStore).VariableID = 0;
   streamVar.MemorySlotsAssigned.push_back(MemoryAddressToStore);
+}
+void InsertWholeDataInSB(const std::string &Data, const TokenTypes &DT) {
+  switch (DT) {
+  case (TokenTypes::StringVal):
+    for (const char ch : Data) {
+      InsertDataInSB(ch, TokenTypes::CharVal);
+    }
+    break;
+  case (TokenTypes::IntVal):
+  case (TokenTypes::TrueVal):
+  case (TokenTypes::CharVal):
+  case (TokenTypes::FalseVal):
+  case (TokenTypes::DoubleVal):
+    InsertDataInSB(Data, DT);
+    break;
+  default:
+    std::cout << "FAILED:InsertWholeDataInSB";
+
+    break;
+  }
+  AddNullChar();
 }
 void AddNullChar() {
   int NullCharMemoryAdr = AllocateSBmemory();
@@ -237,30 +259,20 @@ void ResolveWriteMode() {
     BCR = ByteCode.at(BCP);
   }
 }
-std::string GetDataFromToken() {
+std::pair<std::string, TokenTypes> GetDataFromToken() {
   // returns the value of a token
   // if a value constant or a literal value (int, dobule, bool, string, char),
   // returns that
   // if a variable, returns the data stored in it
   ByteCodeDT BCR = ByteCode.at(BCP);
   std::string Data = BCR.LiteralToken;
+  TokenTypes type = BCR.TypeRepr;
   switch (BCR.TypeRepr) {
   case TokenTypes::StringVal:
   case TokenTypes::CharVal:
   case TokenTypes::IntVal:
   case TokenTypes::DoubleVal:
   case TokenTypes::BoolVal:
-    break;
-  case TokenTypes::Flag:
-    for (const char &ch : BCR.LiteralToken) {
-      switch (ch) {
-      case 'n':
-        Data = "\n";
-        break;
-      default:
-        ShowError(BCR, ErrorTypes::InvalidFlag);
-      }
-    }
     break;
   case TokenTypes::BoolExpr: {
     Data = (OperateBoolExpr()) ? "T" : "F";
@@ -273,6 +285,7 @@ std::string GetDataFromToken() {
       DataMAdr = srcVar.MemorySlotsAssigned.at(idx);
       Data = SBMemory.at(DataMAdr).Data;
     }
+    type = srcVar.DataType;
     break;
   }
   case TokenTypes::ArrayHint: {
@@ -285,17 +298,22 @@ std::string GetDataFromToken() {
         Data = "false";
     } else
       Data = PrintData;
+    type = Arr.DataType;
     break;
   }
   case TokenTypes::MathExpr:
     Data = std::to_string(OperateMathExpr());
+    type = TokenTypes::DoubleVal;
+    break;
+  case TokenTypes::Colon:
+    Data = "-";
     break;
   default:
     ShowError(BCR, ErrorTypes::GarbageArgInACommand);
     break;
   }
 
-  return Data;
+  return {Data, type};
 }
 bool OperateBoolExpr() {
   BCP++;
@@ -385,7 +403,7 @@ bool OperateBoolExpr() {
     }
 
     case TokenTypes::VariableID: {
-      std::string data = GetDataFromToken();
+      auto [data, DT] = GetDataFromToken();
       TokenTypes dataType =
           GetVariableMetaData(std::stoi(BCR.LiteralToken))->DataType;
       EvalStack.push({data, dataType});
@@ -501,7 +519,7 @@ double OperateMathExpr() {
             GetVariableMetaData(std::stoi(BCR.LiteralToken))->DataType;
         if (DT != TokenTypes::IntVal && DT != TokenTypes::DoubleVal)
           ShowError(BCR, ErrorTypes::NonDigitDataForclc);
-        EvalStack.push(std::stod(GetDataFromToken()));
+        EvalStack.push(std::stod(GetDataFromToken().first));
         break;
       }
       case TokenTypes::ArrayHint: {
@@ -553,93 +571,16 @@ void ResolveReadMode(TokenTypes cmd) {
   ByteCodeDT BCR = ByteCode.at(BCP); // no issue here
   Mode CurrentState = Read;
   bool NoOtherThanInt = cmd == TokenTypes::mlc;
-  while (BCR.TypeRepr != TokenTypes::NewLine &&
-         BCR.TypeRepr !=
-             TokenTypes::ENDCODE) { // no issue on the first iteration
+  while ((BCR.TypeRepr != TokenTypes::NewLine &&
+          BCR.TypeRepr != TokenTypes::ENDCODE) ||
+         CurrentState == Read) { // no issue on the first iteration
 
-    TokenTypes CurrentTokenType = BCR.TypeRepr;
-    switch (CurrentTokenType) {
-    case TokenTypes::Colon:
+    auto [Dat, DTP] = GetDataFromToken();
+    if (DTP == TokenTypes::Colon) {
       CurrentState = Write;
-      BCP++;
-      return;
-
-    case TokenTypes::IntVal:
-    case TokenTypes::CharVal:
-    case TokenTypes::DoubleVal:
-    case TokenTypes::TrueVal:
-    case TokenTypes::FalseVal: {
-      if (NoOtherThanInt) {
-        if (CurrentTokenType != TokenTypes::IntVal)
-          ShowError(BCR, ErrorTypes::GarbageArgInACommand);
-        else if (std::stoi(BCR.LiteralToken) < 0)
-          ShowError(BCR, ErrorTypes::ZeroOrNegativeMemoryAllocation);
-      }
-      if (CurrentTokenType == TokenTypes::TrueVal ||
-          CurrentTokenType == TokenTypes::FalseVal)
-        CurrentTokenType = TokenTypes::BoolVal;
-      InsertDataInSB(BCR.LiteralToken, CurrentTokenType);
-      AddNullChar();
-      break; // Breaks inner switch
-    }
-    case TokenTypes::MathExpr: {
-      double Value = OperateMathExpr();
-      InsertDataInSB(std::to_string(Value), TokenTypes::DoubleVal);
-      AddNullChar();
       break;
     }
-    case TokenTypes::StringVal: {
-      if (NoOtherThanInt)
-        ShowError(BCR, ErrorTypes::GarbageArgInACommand);
-      int MemoryAddressToStore;
-      VariableDT &streamVar = *GetVariableMetaData(0);
-      for (int idx = 0; idx < BCR.LiteralToken.size(); idx++) {
-        InsertDataInSB(BCR.LiteralToken.at(idx), TokenTypes::CharVal);
-      }
-      AddNullChar();
-      break;
-    }
-    case TokenTypes::VariableID: {
-      int MemoryAddressToStore;
-      VariableDT &SrcVar = *GetVariableMetaData(std::stoi(BCR.LiteralToken));
-      VariableDT &StreamVar = *GetVariableMetaData(0);
-      if (NoOtherThanInt && SrcVar.DataType != TokenTypes::IntVal)
-        ShowError(BCR, ErrorTypes::GarbageArgInACommand);
-      for (int idx = 0; idx < SrcVar.MemorySlotsAssigned.size(); idx++) {
-        int SrcDataAdr = SrcVar.MemorySlotsAssigned.at(idx);
-        InsertDataInSB(SBMemory.at(SrcDataAdr).Data,
-                       SBMemory.at(SrcDataAdr).DataType);
-      }
-      AddNullChar();
-      break;
-    }
-    case TokenTypes::ArrayHint: {
-      if (NoOtherThanInt &&
-          GetVariableDataType(BCR.LiteralToken) != TokenTypes::IntVal)
-        ShowError(BCR, ErrorTypes::GarbageArgInACommand);
-      std::string Data = GetArrayData();
-      VariableDT &ArrVar = *GetVariableMetaData(std::stoi(BCR.LiteralToken));
-      if (ArrVar.DataType == TokenTypes::StringVal) {
-        for (size_t idx = 0; idx < Data.size(); idx++) {
-          InsertDataInSB(Data.at(idx), TokenTypes::CharVal);
-        }
-        AddNullChar();
-      }
-      InsertDataInSB(Data, BCR.TypeRepr);
-      AddNullChar();
-      break;
-    }
-    case TokenTypes::BoolExpr: {
-      std::string result = (OperateBoolExpr()) ? "T" : "F";
-      InsertDataInSB(result, TokenTypes::BoolVal);
-      AddNullChar();
-      break;
-    }
-    case TokenTypes::NewLine:
-      return;
-    default:
-      ShowError(BCR, ErrorTypes::GarbageArgInACommand);
-    }
+    InsertWholeDataInSB(Dat, DTP);
     ++BCP;
     if (!CheckIfAppBCP())
       return;
@@ -647,15 +588,14 @@ void ResolveReadMode(TokenTypes cmd) {
   }
   ++BCP;
 }
-std::pair<TokenTypes, std::string> GetTopStreamData() {
+std::pair<std::string, TokenTypes> GetTopStreamData() {
   VariableDT &SrcV = *GetVariableMetaData(0);
   if (SrcV.MemorySlotsAssigned.empty())
     ShowError(ByteCode.at(BCP), ErrorTypes::StreamVarEmpty);
   TokenTypes DT = SBMemory.at(SrcV.MemorySlotsAssigned.front()).DataType;
   std::string Data = SBMemory.at(SrcV.MemorySlotsAssigned.front()).Data;
-  ReleaseMemoryFromStream(); // to remove the int data
-  ReleaseMemoryFromStream(); // to remove the null char
-  return {DT, Data};
+  ReleaseMemoryFromStream(); // to remove the data
+  return {Data, DT};
 }
 
 } // namespace
@@ -665,7 +605,14 @@ void outCommand() {
   ByteCodeDT BCR = ByteCode.at(BCP);
   while (BCR.TypeRepr != TokenTypes::NewLine &&
          BCR.TypeRepr != TokenTypes::ENDCODE) {
-    std::cout << GetDataFromToken();
+    auto [Data, DT] = GetDataFromToken();
+    InsertWholeDataInSB(Data, DT);
+    while (true) {
+      auto [DT2, DTP] = GetTopStreamData();
+      if (DTP == TokenTypes::Unknown)
+        break;
+      std::cout << DT2;
+    }
     BCP++;
     if (!CheckIfAppBCP())
       return;
@@ -723,12 +670,12 @@ void mlcCommand() {
       if (Arridx >= 0)
         ShowError(BCR, ErrorTypes::CannotTransformStaticVaribles);
 
-      auto [DT, MemorySpaceAllocated] = GetTopStreamData();
+      auto [MemorySpaceAllocated, DT] = GetTopStreamData();
+      if (DT != TokenTypes::IntVal)
+        ShowError(BCR, ErrorTypes::InvalidTypeForNumberOfAllocations);
       int Allocated = std::stoi(MemorySpaceAllocated);
       if (Allocated < 0)
         ShowError(BCR, ErrorTypes::ZeroOrNegativeMemoryAllocation);
-      if (DT != TokenTypes::IntVal)
-        ShowError(BCR, ErrorTypes::InvalidTypeForNumberOfAllocations);
 
       IncreaseMemorySpaces(VariableID, Allocated);
       break;

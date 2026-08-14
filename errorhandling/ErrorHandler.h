@@ -42,14 +42,14 @@ enum class ErrorTypes {
   IndependentelfCommand,
   MidLineCommandIndicationForInvalidToken,
   ExpectedAValidMidLineCommand,
+  NoParameterIndication,
 };
 
 inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
     {ErrorTypes::CommandNotFound,
      "is not a user-made command, nor a primitive command"}, // format: <invalid
                                                              // command> string
-    {ErrorTypes::IdentifierNotFound,
-     "was not declared"}, // format: <Identifier name> string
+    {ErrorTypes::IdentifierNotFound, " the identifier was not declared"},
     {ErrorTypes::MemoryNotDeclared,
      "Memory was not declared"}, // format: string
     {ErrorTypes::MemoryFull,
@@ -116,6 +116,7 @@ inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
      "line command was given"},
     {ErrorTypes::ExpectedAValidMidLineCommand,
      "The line command expects a valid mid-line command but was not given"},
-};
+    {ErrorTypes::NoParameterIndication,
+     "dec line expects a parameter indicator but was not given"}};
 void ShowError(const TokenDT &Token, const ErrorTypes &Type);
 void ShowError(const ByteCodeDT &Token, const ErrorTypes &Type);

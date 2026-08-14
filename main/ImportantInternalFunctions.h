@@ -7,6 +7,7 @@
 #include <string>
 
 int SMalloc();
+int GetModuleID();
 bool ValidateName(const std::string &Name);
 TokenTypes DetermineDataType(const std::string &Token);
 bool CheckIfValidGlobalVariable(const int &VariableID);

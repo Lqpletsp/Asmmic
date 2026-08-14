@@ -1,7 +1,6 @@
 #include "../errorhandling/ErrorHandler.h"
 #include "../main/ImportantInternalFunctions.h"
 #include "../main/types.h"
-#include <iostream> // db
 
 void DeclareMemory(const TokenizedLineDT &MemDecLine) {
   if (MemDecLine.size() != 1) {
@@ -13,7 +12,7 @@ void DeclareMemory(const TokenizedLineDT &MemDecLine) {
   TotalMemSize = std::stoi(MemDecLine.at(0).LiteralToken);
   if (TotalMemSize <= 0)
     ShowError(MemDecLine.at(0), ErrorTypes::ZeroOrNegativeMemorySapces);
-  for (int i = TotalMemSize - 1; i > -1; i--) {
+  for (int i = TotalMemSize - 1; i > -1; --i) {
     g_TotalMemPool.push(i);
     RawDataRepr EmptyRawData;
     SBMemory.push_back(EmptyRawData);
@@ -22,7 +21,31 @@ void DeclareMemory(const TokenizedLineDT &MemDecLine) {
   int VariableIDTemp = GetVariableID();
   g_VariableTable[VariableIDTemp] = tempVar;
 }
-
+void DeclareModules(const TokenizedLineDT &ModDecLine) {
+  if (ModDecLine.empty())
+    return;
+  int ModID = GetModuleID();
+  MapModuleNameAndID[ModDecLine.at(0).LiteralToken] = ModID;
+  ModuleDT ModuleInfo = {ModID};
+  if (ModDecLine.size() < 2)
+    return;
+  else if (ModDecLine.at(1).LiteralToken != ":")
+    ShowError(ModDecLine.at(2), ErrorTypes::NoParameterIndication);
+  VariableDT parameter{
+      .DataType = TokenTypes::Unknown,
+      .MemorySlotsAssigned = {},
+      .Array = false,
+  };
+  global = false;
+  c_VariableTable = &l_VariableTable;
+  c_MapVariableNameAndID = &l_MapVariableNameAndID;
+  for (size_t i = 2; i < ModDecLine.size(); ++i) {
+    int VarID = GetVariableID();
+    ModuleInfo.Parameters.push_back(parameter);
+    (*c_MapVariableNameAndID)[ModDecLine.at(i).LiteralToken] = VarID;
+    (*c_VariableTable)[VarID] = parameter;
+  }
+}
 void DeclareVariable(const TokenizedLineDT &VarDecLine) {
   TokenTypes DataType;
   bool Array = false;
@@ -66,16 +89,11 @@ void DeclareVariable(const TokenizedLineDT &VarDecLine) {
                                   // "MyNum" is valid variable name
       if (DataType == TokenTypes::StringVal && Array)
         ShowError(token, ErrorTypes::AttemptedMultiDimensionalArrays);
-      auto &CurrentMemory = global ? g_VariableTable : l_VariableTable;
-      VariableDT Variable;
-      Variable.DataType = DataType;
-      if (Array)
-        Variable.Array = true;
-      else
-        Variable.Array = false;
+      VariableDT Variable{.DataType = DataType, .Array = Array};
+
       int VariableID = GetVariableID();
-      CurrentMemory[VariableID] = Variable;
-      MapVariableNameAndID[LiteralToken] = VariableID;
+      (*c_VariableTable)[VariableID] = Variable;
+      (*c_MapVariableNameAndID)[LiteralToken] = VariableID;
       VarCount++;
     } else
       ShowError(token, ErrorTypes::GarbageArgInACommand);
