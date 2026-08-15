@@ -81,15 +81,28 @@ TokenizedCodeDT TokenizeCode(const std::string &MAINCODE) {
                  ch == '.') {
 
         // Flush existing word token
+        bool MLCcheck = false;
         if (!CurrentToken.empty()) {
-          TokenizedLine.push_back(
-              PushToken(CurrentToken, RowCount, TokenStartCol));
-          CurrentToken.clear();
+          MLCcheck = CurrentToken.at(0) == '.' && ch == ' ' &&
+                     CurrentToken.size() == 1;
+          if (!MLCcheck) {
+            TokenizedLine.push_back(
+                PushToken(CurrentToken, RowCount, TokenStartCol));
+            CurrentToken.clear();
+          }
         }
         // If it's an operator, capture it as its own token
-        if (ch != ' ' && ch != '\t' && ch != ',') {
-          TokenizedLine.push_back(
-              PushToken(std::string(1, ch), RowCount, ColCount));
+        if (ch != ' ' && ch != '\t' && ch != ',' && !MLCcheck) {
+          MLCcheck = (!CurrentToken.empty())
+                         ? (CurrentToken.at(0) == '.' && ch == ' ' &&
+                            CurrentToken.size() == 1)
+                         : false;
+          if (MLCcheck) {
+            TokenizedLine.push_back(
+                PushToken(std::string(1, ch), RowCount, ColCount));
+          } else {
+            CurrentToken += ch;
+          }
         }
       } else {
         // If we are starting a brand new token, record its column position

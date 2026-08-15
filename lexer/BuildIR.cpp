@@ -574,7 +574,7 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
         if (LinePointer >= Line.size())
           ShowError(Token, ErrorTypes::InvalidEndStatement);
         Token = Line.at(LinePointer);
-        if (Token.LiteralToken == "cmp") {
+        if (Token.LiteralToken == ".cmp") {
           if (CMPStartLine.size() > 1)
             ShowError(Token, ErrorTypes::PastCMPstatementsStartedbutNotEnded);
           ByteCode.at(CMPStartLine.top()).LiteralToken =
@@ -597,12 +597,12 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
           LinePointer++;
           continue;
         }
-        if (Token.LiteralToken == "all") {
+        if (Token.LiteralToken == ".all") {
           ByteCode.push_back(
               CreateByteCodeToken("", -1, -1, TokenTypes::ENDCODE));
           LinePointer++;
           continue;
-        } else if (Token.LiteralToken == "rpt") {
+        } else if (Token.LiteralToken == ".rpt") {
           // assuming the most recent rpt line ended
           if (RPTStartLine.empty())
             ShowError(Token, ErrorTypes::endrptStatementGivenButNotStarted);

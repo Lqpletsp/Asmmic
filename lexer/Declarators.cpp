@@ -106,9 +106,9 @@ void decCommand(const TokenizedLineDT &DecLine) {
   }
   std::string MLC = DecLine.at(0).LiteralToken;
   TokenizedLineDT LineArguments = SliceStuff(1, DecLine.size() - 1, DecLine);
-  if (MLC == "mem")
+  if (MLC == ".mem")
     DeclareMemory(LineArguments);
-  else if (MLC == "var") {
+  else if (MLC == ".var") {
     if (g_TotalMemPool.size() == 0)
       ShowError(DecLine.at(0), ErrorTypes::MemoryFull);
     DeclareVariable(LineArguments);
