@@ -405,13 +405,13 @@ bool OperateBoolExpr() {
 
     case TokenTypes::VariableID: {
       auto [data, DT] = GetDataFromToken();
-      TokenTypes dataType =
-          GetVariableMetaData(std::stoi(BCR.LiteralToken))->DataType;
-      EvalStack.push({data, dataType});
+      EvalStack.push({data, DT});
       break;
     }
     case TokenTypes::MathExpr: {
       std::string Result = std::to_string(OperateMathExpr());
+      std::cout << Result << std::endl;
+      ;
       EvalStack.push({Result, TokenTypes::DoubleVal});
       break;
     }

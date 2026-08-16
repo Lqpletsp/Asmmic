@@ -81,18 +81,25 @@ TokenizedCodeDT TokenizeCode(const std::string &MAINCODE) {
                  ch == '.') {
 
         // Flush existing word token
-        bool MLCcheck = false;
+        bool MLCcheck = false, FloatingDigitCheck = false;
+        try {
+          std::stod(CurrentToken);
+          FloatingDigitCheck = true;
+        } catch (...) {
+        }
+
         if (!CurrentToken.empty()) {
           MLCcheck = CurrentToken.at(0) == '.' && ch == ' ' &&
                      CurrentToken.size() == 1;
-          if (!MLCcheck) {
+          if (!(MLCcheck || FloatingDigitCheck)) {
             TokenizedLine.push_back(
                 PushToken(CurrentToken, RowCount, TokenStartCol));
             CurrentToken.clear();
           }
         }
         // If it's an operator, capture it as its own token
-        if (ch != ' ' && ch != '\t' && ch != ',' && !MLCcheck) {
+        if (ch != ' ' && ch != '\t' && ch != ',' &&
+            !(MLCcheck || FloatingDigitCheck)) {
           MLCcheck = (!CurrentToken.empty())
                          ? (CurrentToken.at(0) == '.' && ch == ' ' &&
                             CurrentToken.size() == 1)

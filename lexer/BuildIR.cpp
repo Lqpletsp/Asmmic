@@ -217,6 +217,10 @@ template <typename T> int HandleVariables(const T &Line, TokenDT &Token) {
 }
 
 int HandleShuntingYard(const TokenizedLineDT &Line, const std::string &cmd) {
+  TokenTypes StartIndication =
+      (cmd == "clc") ? TokenTypes::MathExpr : TokenTypes::BoolExpr;
+  ByteCode.push_back(CreateByteCodeToken("", -1, -1, StartIndication));
+
   std::deque<TokenDT> outputQueue;
   std::stack<TokenDT> operatorStack;
 
@@ -380,12 +384,8 @@ int HandleShuntingYard(const TokenizedLineDT &Line, const std::string &cmd) {
     operatorStack.pop();
   }
 
-  TokenTypes StartIndication =
-      (cmd == "clc") ? TokenTypes::MathExpr : TokenTypes::BoolExpr;
   TokenTypes EndIndication =
       (cmd == "clc") ? TokenTypes::MathExprEnd : TokenTypes::BoolExprEnd;
-
-  ByteCode.push_back(CreateByteCodeToken("", -1, -1, StartIndication));
 
   while (!outputQueue.empty()) {
     TokenDT Token = outputQueue.front();
