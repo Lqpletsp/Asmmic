@@ -63,7 +63,7 @@ void InsertWholeDataInSB(const std::string &Data, const TokenTypes &DT) {
     InsertDataInSB(Data, DT);
     break;
   default:
-    std::cout << "FAILED:InsertWholeDataInSB";
+    std::cout << "FAILED:InsertWholeDataInSB;TTYPE" << static_cast<int>(DT);
 
     break;
   }
@@ -276,6 +276,7 @@ std::pair<std::string, TokenTypes> GetDataFromToken() {
     break;
   case TokenTypes::BoolExpr: {
     Data = (OperateBoolExpr()) ? "T" : "F";
+    type = (Data == "T") ? TokenTypes::TrueVal : TokenTypes::FalseVal;
     break;
   }
   case TokenTypes::VariableID: {

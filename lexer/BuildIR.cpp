@@ -322,7 +322,7 @@ int HandleShuntingYard(const TokenizedLineDT &Line, const std::string &cmd) {
     } else if (type == TokenTypes::clc || type == TokenTypes::evl) {
       std::string cmd = (type == TokenTypes::clc) ? "clc" : "evl";
       TokenizedLineDT SlicedLine =
-          SliceStuff(LinePointer, Line.size() - 1, Line);
+          SliceStuff(LinePointer + 1, Line.size() - 1, Line);
       int Increment = HandleShuntingYard(SlicedLine, cmd);
       LinePointer += Increment;
     } else if (IsOperand(type)) {
