@@ -1,5 +1,1 @@
-dec mem 100; 
 
-
-set "Hello world" : ; 
-out :

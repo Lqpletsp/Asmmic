@@ -1,7 +1,7 @@
 
 #include "../main/types.h"
+#include <iostream>
 #include <string>
-
 TokenDT PushToken(const std::string &CurrentToken, const int RowCount,
                   const int ColCount) {
   TokenDT Token;
@@ -82,10 +82,12 @@ TokenizedCodeDT TokenizeCode(const std::string &MAINCODE) {
 
         // Flush existing word token
         bool MLCcheck = false, FloatingDigitCheck = false;
-        try {
-          std::stod(CurrentToken);
-          FloatingDigitCheck = true;
-        } catch (...) {
+        if (ch == '.') {
+          try {
+            std::stod(CurrentToken);
+            FloatingDigitCheck = true;
+          } catch (...) {
+          }
         }
 
         if (!CurrentToken.empty()) {
@@ -104,15 +106,17 @@ TokenizedCodeDT TokenizeCode(const std::string &MAINCODE) {
                          ? (CurrentToken.at(0) == '.' && ch == ' ' &&
                             CurrentToken.size() == 1)
                          : false;
-          if (MLCcheck) {
+          if (MLCcheck || FloatingDigitCheck) {
             TokenizedLine.push_back(
                 PushToken(std::string(1, ch), RowCount, ColCount));
           } else {
             CurrentToken += ch;
           }
+        } else if (ch != ' ' && ch != '\t' && ch != ',' &&
+                   (MLCcheck || FloatingDigitCheck)) {
+          CurrentToken += ch;
         }
       } else {
-        // If we are starting a brand new token, record its column position
         if (CurrentToken.empty()) {
           TokenStartCol = ColCount;
         }

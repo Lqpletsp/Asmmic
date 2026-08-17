@@ -24,6 +24,7 @@ int main() {
 
 void DebugFunction() {
   for (const ByteCodeDT BC : ByteCode) {
-    std::cout << static_cast<int>(BC.TypeRepr) << ' ';
+    std::cout << static_cast<int>(BC.TypeRepr) << ' ' << BC.LiteralToken
+              << std::endl;
   }
 }

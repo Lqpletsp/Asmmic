@@ -410,8 +410,6 @@ bool OperateBoolExpr() {
     }
     case TokenTypes::MathExpr: {
       std::string Result = std::to_string(OperateMathExpr());
-      std::cout << Result << std::endl;
-      ;
       EvalStack.push({Result, TokenTypes::DoubleVal});
       break;
     }

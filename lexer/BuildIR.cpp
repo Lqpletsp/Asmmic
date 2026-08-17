@@ -85,13 +85,15 @@ bool CheckIfMidLineCommand(const TokenTypes &EnumTokenVal) {
 
 TokenTypes DetermineType(const std::string &Token) {
   try {
-    std::stoi(Token);
+    std::stod(Token);
     std::stringstream ss(Token);
     double num;
     if ((ss >> num) && ss.eof()) {
       if (Token.find('.') != std::string::npos)
         return TokenTypes::DoubleVal; // float
-      return TokenTypes::IntVal;      // int
+      if (Token.find('.') == std::string::npos)
+        return TokenTypes::IntVal; // int
+      return TokenTypes::DoubleVal;
     }
   } catch (...) {
   }
