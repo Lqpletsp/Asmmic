@@ -50,7 +50,9 @@ std::unordered_map<std::string, TokenTypes> MapStringAndCommand = {
     {"=", TokenTypes::Equal},
     {"elf", TokenTypes::elf},
     {"ele", TokenTypes::ele},
-    {".", TokenTypes::Period}};
+    {".", TokenTypes::Period},
+    {"gto", TokenTypes::gto},
+};
 
 bool CheckIfCommand(const TokenTypes &EnumTokenVal) {
   switch (EnumTokenVal) {
@@ -564,6 +566,12 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
           LiteralString = Token.LiteralToken;
           TypeOfToken = type;
         }
+      } else if (TypeOfToken == TokenTypes::gto) {
+        if (Line.size() < 2)
+          ShowError(Line.at(0), ErrorTypes::NoArgumentsForgtoCommand);
+        for (const auto Token : SliceStuff(1, Line.size() - 1, Line)) {
+        }
+
       } else if (TypeOfToken == TokenTypes::rpt) {
         RPTStartLine.push(ByteCode.size());
         ByteCode.push_back(CreateByteCodeToken(
@@ -598,8 +606,7 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
 
           LinePointer++;
           continue;
-        }
-        if (Token.LiteralToken == ".all") {
+        } else if (Token.LiteralToken == ".all") {
           ByteCode.push_back(
               CreateByteCodeToken("", -1, -1, TokenTypes::ENDCODE));
           LinePointer++;
@@ -620,6 +627,19 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
           RPTStartLine.pop();
           LinePointer++;
           continue;
+        } else if (Token.LiteralToken == ".mod") {
+          LocalModuleVariableTable[CurrentModuleID - 1] = *c_VariableTable;
+          l_VariableTable.clear();
+          l_MapVariableNameAndID.clear();
+          c_MapVariableNameAndID = &g_MapVariableNameAndID;
+          c_VariableTable = &g_VariableTable;
+          ByteCode.push_back({.LiteralToken = "!",
+                              .LineNum = -1,
+                              .ColNum = -1,
+                              .TypeRepr = TokenTypes::gotoln});
+          // ! means tells the VM to read from a stack
+          ByteCode.at(TrackModuleDecLine.top()).LiteralToken =
+              std::to_string(ByteCode.size());
         }
       } else {
 

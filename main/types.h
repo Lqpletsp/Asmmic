@@ -34,6 +34,7 @@ enum class TokenTypes {
   BoolExpr,
   BoolExprEnd,
   ArrEnd,
+  Module,
   ENDCODE,
   // data types
   DoubleVal,
@@ -74,6 +75,7 @@ enum class TokenTypes {
   cmp,
   elf,
   ele,
+  gto,
   // symbols
   Colon,   //":"
   Stopper, // "]"
@@ -95,7 +97,7 @@ struct VariableDT {
 // THIS IS THE MAIN CODE!!!
 inline std::string MAINCODE = R"(
   dec.mem 100; 
-  out .2;
+  out.evl T;
 )";
 
 inline std::vector<ByteCodeDT> ByteCode;
@@ -108,7 +110,8 @@ struct RawDataRepr {
 };
 struct ModuleDT {
   int ModuleID;
-  std::vector<VariableDT> Parameters;
+  std::vector<int> ParameterID;
+  int ByteCodeStart;
 };
 inline int CurrentModuleID = 0;
 inline int VarCount = 0;
@@ -126,9 +129,9 @@ inline std::unordered_map<std::string, int> g_MapVariableNameAndID;
 inline std::unordered_map<std::string, int> l_MapVariableNameAndID;
 inline std::unordered_map<std::string, int> *c_MapVariableNameAndID =
     &g_MapVariableNameAndID;
-
 inline std::unordered_map<std::string, int> MapModuleNameAndID;
 inline std::unordered_map<int, std::unordered_map<int, VariableDT>>
     LocalModuleVariableTable;
 inline std::stack<int> ModuleStack;
+inline std::stack<int> TrackModuleDecLine;
 inline int CurrentVariableID = 0;

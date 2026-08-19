@@ -26,7 +26,16 @@ void DeclareModules(const TokenizedLineDT &ModDecLine) {
     return;
   int ModID = GetModuleID();
   MapModuleNameAndID[ModDecLine.at(0).LiteralToken] = ModID;
-  ModuleDT ModuleInfo = {ModID};
+  ByteCode.push_back({
+      .LiteralToken = "",
+      .LineNum = -1,
+      .ColNum = -1,
+      .TypeRepr = TokenTypes::gotoln,
+  });
+  int BCi = ByteCode.size();
+  TrackModuleDecLine.push(BCi - 1);
+
+  ModuleDT ModuleInfo = {.ModuleID = ModID, .ByteCodeStart = BCi};
   if (ModDecLine.size() < 2)
     return;
   else if (ModDecLine.at(1).LiteralToken != ":")
@@ -41,10 +50,18 @@ void DeclareModules(const TokenizedLineDT &ModDecLine) {
   c_MapVariableNameAndID = &l_MapVariableNameAndID;
   for (size_t i = 2; i < ModDecLine.size(); ++i) {
     int VarID = GetVariableID();
-    ModuleInfo.Parameters.push_back(parameter);
     (*c_MapVariableNameAndID)[ModDecLine.at(i).LiteralToken] = VarID;
     (*c_VariableTable)[VarID] = parameter;
+    ModuleInfo.ParameterID.push_back(VarID);
   }
+  ModuleTable[ModID] = ModuleInfo;
+  LocalModuleVariableTable[ModID] = {};
+  ByteCode.push_back({
+      .LiteralToken = std::to_string(ModID),
+      .LineNum = -1,
+      .ColNum = -1,
+      .TypeRepr = TokenTypes::Module,
+  });
 }
 void DeclareVariable(const TokenizedLineDT &VarDecLine) {
   TokenTypes DataType;

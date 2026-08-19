@@ -43,6 +43,7 @@ enum class ErrorTypes {
   MidLineCommandIndicationForInvalidToken,
   ExpectedAValidMidLineCommand,
   NoParameterIndication,
+  NoArgumentsForgtoCommand,
 };
 
 inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
@@ -117,6 +118,9 @@ inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
     {ErrorTypes::ExpectedAValidMidLineCommand,
      "The line command expects a valid mid-line command but was not given"},
     {ErrorTypes::NoParameterIndication,
-     "dec line expects a parameter indicator but was not given"}};
+     "dec line expects a parameter indicator but was not given"},
+    {ErrorTypes::NoArgumentsForgtoCommand,
+     "gto command expects at least a single module to be called but was not "
+     "given"}};
 void ShowError(const TokenDT &Token, const ErrorTypes &Type);
 void ShowError(const ByteCodeDT &Token, const ErrorTypes &Type);
