@@ -135,7 +135,14 @@ ByteCodeDT CreateByteCodeToken(const std::string &LT, const int &LN,
   ByteCodeToken.TypeRepr = TR;
   return ByteCodeToken;
 }
-
+std::string GetStrModuleID(const std::string &ModuleName) {
+  int ModuleID = GetAssignedModuleID(ModuleName);
+  if (ModuleID < 0)
+    return "!";
+  std::stringstream ss;
+  ss << std::fixed << MapModuleNameAndID[ModuleName];
+  return ss.str();
+}
 std::string GetStrVariableID(const std::string &VariableName) {
   int VariableID = GetAssignedVariableID(VariableName);
   if (VariableID < 0 || !CheckIfValidGlobalVariable(VariableID))
@@ -570,7 +577,21 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
         if (Line.size() < 2)
           ShowError(Line.at(0), ErrorTypes::NoArgumentsForgtoCommand);
         for (const auto Token : SliceStuff(1, Line.size() - 1, Line)) {
+          int ModID = GetAssignedModuleID(Token.LiteralToken);
+          LiN = Token.LineNum;
+          CoN = Token.ColNum;
+          if (ModID < 0)
+            ShowError(Token, ErrorTypes::IdentifierNotFound);
+          ModuleDT ModData = GetModuleMetaData(ModID);
+          ByteCode.push_back(
+              CreateByteCodeToken(std::to_string(ModData.ByteCodeStart), LiN,
+                                  CoN, TokenTypes::gotoln));
+          ByteCode.push_back({.LiteralToken = "",
+                              .LineNum = LiN,
+                              .ColNum = CoN,
+                              .TypeRepr = TokenTypes::NewLine});
         }
+        continue;
 
       } else if (TypeOfToken == TokenTypes::rpt) {
         RPTStartLine.push(ByteCode.size());
@@ -629,8 +650,8 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
           continue;
         } else if (Token.LiteralToken == ".mod") {
           LocalModuleVariableTable[CurrentModuleID - 1] = *c_VariableTable;
-          l_VariableTable.clear();
-          l_MapVariableNameAndID.clear();
+          (*c_VariableTable).clear();
+          (*c_MapVariableNameAndID).clear();
           c_MapVariableNameAndID = &g_MapVariableNameAndID;
           c_VariableTable = &g_VariableTable;
           ByteCode.push_back({.LiteralToken = "!",
@@ -638,6 +659,8 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
                               .ColNum = -1,
                               .TypeRepr = TokenTypes::gotoln});
           // ! means tells the VM to read from a stack
+          if (TrackModuleDecLine.empty())
+            ShowError(Token, ErrorTypes::ModuleTriedEndingButWasNotStarted);
           ByteCode.at(TrackModuleDecLine.top()).LiteralToken =
               std::to_string(ByteCode.size());
         }

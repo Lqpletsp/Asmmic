@@ -44,6 +44,8 @@ enum class ErrorTypes {
   ExpectedAValidMidLineCommand,
   NoParameterIndication,
   NoArgumentsForgtoCommand,
+  ModuleTriedEndingButWasNotStarted,
+
 };
 
 inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
@@ -121,6 +123,9 @@ inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
      "dec line expects a parameter indicator but was not given"},
     {ErrorTypes::NoArgumentsForgtoCommand,
      "gto command expects at least a single module to be called but was not "
-     "given"}};
+     "given"},
+    {ErrorTypes::ModuleTriedEndingButWasNotStarted,
+     ".mod argument for end command expects a started module but was not "
+     "started"}};
 void ShowError(const TokenDT &Token, const ErrorTypes &Type);
 void ShowError(const ByteCodeDT &Token, const ErrorTypes &Type);

@@ -51,6 +51,9 @@ bool CheckIfValidGlobalVariable(
                                                                      : true;
 }
 
+ModuleDT GetModuleMetaData(const int &VariableID) {
+  return ModuleTable[VariableID];
+}
 VariableDT *GetVariableMetaData(const int &VariableID) {
   return &(*c_VariableTable)[VariableID];
 }
@@ -84,4 +87,12 @@ int GetAssignedVariableID(const std::string &VariableName) {
     return -1; // Or whatever sentinel value you use for "not found"
   }
   return it->second; // Return the actual ID stored in the map
+}
+
+int GetAssignedModuleID(const std::string &ModuleName) {
+  auto it = MapModuleNameAndID.find(ModuleName);
+  if (it == MapModuleNameAndID.end()) {
+    return -1;
+  }
+  return it->second;
 }

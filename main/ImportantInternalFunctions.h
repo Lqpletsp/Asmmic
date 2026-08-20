@@ -5,7 +5,8 @@
 #include <iterator>
 #include <sstream>
 #include <string>
-
+ModuleDT GetModuleMetaData(const int &VariableID);
+int GetAssignedModuleID(const std::string &ModuleName);
 int SMalloc();
 int GetModuleID();
 bool ValidateName(const std::string &Name);
