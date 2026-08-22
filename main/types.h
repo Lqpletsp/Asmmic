@@ -132,6 +132,6 @@ inline std::unordered_map<std::string, int> *c_MapVariableNameAndID =
 inline std::unordered_map<std::string, int> MapModuleNameAndID;
 inline std::unordered_map<int, std::unordered_map<int, VariableDT>>
     LocalModuleVariableTable;
-inline std::stack<int> ModuleStack;
+inline std::stack<int> InterpreterModuleStack;
 inline std::stack<int> TrackModuleDecLine;
 inline int CurrentVariableID = 0;

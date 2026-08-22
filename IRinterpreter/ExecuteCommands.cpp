@@ -625,15 +625,31 @@ void Handlegotoln() {
   int FallBackBCP = BCP;
   ++BCP;
   ByteCodeDT token = ByteCode.at(BCP);
-  if (token.TypeRepr == TokenTypes::BoolExpr)
+  switch (token.TypeRepr) {
+  case (TokenTypes::BoolExpr):
     if (OperateBoolExpr())
       return;
     else {
       BCP = std::stoi(ByteCode.at(FallBackBCP).LiteralToken);
     }
-  else {
+    break;
+  case (TokenTypes::Module):
+    InterpreterModuleStack.push(BCP);
     --BCP;
+    // gotoln token contains the bytecode index to go
     BCP = std::stoi(ByteCode.at(BCP).LiteralToken);
+    break;
+  default:
+    --BCP;
+    try {
+      BCP = std::stoi(ByteCode.at(BCP).LiteralToken);
+    } catch (...) {
+      if (token.LiteralToken == "!") {
+        BCP = InterpreterModuleStack.top();
+        InterpreterModuleStack.pop();
+      }
+    }
+    break;
   }
 }
 void setCommand() {
@@ -643,7 +659,13 @@ void setCommand() {
     return;
   ResolveWriteMode();
 }
-
+void HandleModule() {
+  ++BCP;
+  ByteCodeDT BCR = ByteCode.at(BCP);
+  // since the bytecode was validated, no need to check whether the code is
+  // valid or not
+  c_VariableTable = &LocalModuleVariableTable[std::stoi(BCR.LiteralToken)];
+}
 void mlcCommand() {
   ++BCP;
   ResolveReadMode(TokenTypes::set);

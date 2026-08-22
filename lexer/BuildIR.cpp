@@ -586,6 +586,8 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
           ByteCode.push_back(
               CreateByteCodeToken(std::to_string(ModData.ByteCodeStart), LiN,
                                   CoN, TokenTypes::gotoln));
+          ByteCode.push_back(CreateByteCodeToken(std::to_string(ModID), -1, -1,
+                                                 TokenTypes::Module));
           ByteCode.push_back({.LiteralToken = "",
                               .LineNum = LiN,
                               .ColNum = CoN,
@@ -649,6 +651,8 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
           LinePointer++;
           continue;
         } else if (Token.LiteralToken == ".mod") {
+          if (TrackModuleDecLine.empty())
+            ShowError(Token, ErrorTypes::ModuleTriedEndingButWasNotStarted);
           LocalModuleVariableTable[CurrentModuleID - 1] = *c_VariableTable;
           (*c_VariableTable).clear();
           (*c_MapVariableNameAndID).clear();
@@ -659,8 +663,7 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
                               .ColNum = -1,
                               .TypeRepr = TokenTypes::gotoln});
           // ! means tells the VM to read from a stack
-          if (TrackModuleDecLine.empty())
-            ShowError(Token, ErrorTypes::ModuleTriedEndingButWasNotStarted);
+
           ByteCode.at(TrackModuleDecLine.top()).LiteralToken =
               std::to_string(ByteCode.size());
         }
