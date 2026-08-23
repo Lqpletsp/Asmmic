@@ -447,7 +447,78 @@ int HandleShuntingYard(const TokenizedLineDT &Line, const std::string &cmd) {
 
   return InterruptedPtr + 2;
 }
+void HandleModuleCalls(const TokenizedLineDT &Line) {
+  bool LoadStreamComplete = false;
+  int LP = 0;
 
+  auto AddNewLine = [&]() {
+    ByteCode.push_back({.LiteralToken = "",
+                        .LineNum = -1,
+                        .ColNum = -1,
+                        .TypeRepr = TokenTypes::NewLine});
+  };
+  while (LP < Line.size()) {
+    TokenDT token = Line.at(LP);
+    TokenTypes Ttype = DetermineType(token.LiteralToken);
+    int LiN = token.LineNum, CoN = token.ColNum;
+
+    if (!LoadStreamComplete) {
+      ByteCode.push_back(CreateByteCodeToken("set", -1, -1, TokenTypes::set));
+
+      TokenizedLineDT SLine = SliceStuff(LP, Line.size() - 1, Line);
+      switch (Ttype) {
+      case TokenTypes::Colon:
+        LoadStreamComplete = true;
+        break;
+      case TokenTypes::StringVal:
+      case TokenTypes::CharVal:
+      case TokenTypes::IntVal:
+      case TokenTypes::DoubleVal:
+      case TokenTypes::TrueVal:
+      case TokenTypes::FalseVal:
+        ByteCode.push_back(
+            CreateByteCodeToken(token.LiteralToken, LiN, CoN, Ttype));
+        AddNewLine();
+        break;
+      case TokenTypes::clc:
+      case TokenTypes::evl:
+        LP += HandleShuntingYard(SLine, token.LiteralToken);
+        AddNewLine();
+        break;
+      case TokenTypes::Identifier:
+        LP += HandleVariables(SLine, token);
+        AddNewLine();
+        break;
+      default:
+        ShowError(token, ErrorTypes::GarbageToken);
+      }
+    } else {
+      switch (Ttype) {
+      case TokenTypes::Stopper:
+        LoadStreamComplete = false;
+        break;
+      case TokenTypes::Identifier: {
+        std::string ModName = token.LiteralToken;
+        int ModID = GetAssignedModuleID(ModName);
+        if (ModID < 0)
+          ShowError(token, ErrorTypes::IdentifierNotFound);
+
+        // Add tokens to call modules
+        ByteCode.push_back(
+            CreateByteCodeToken("", -1, -1, TokenTypes::NewLine));
+        ModuleDT ModMD = GetModuleMetaData(ModID);
+        ByteCode.push_back(CreateByteCodeToken(
+            std::to_string(ModMD.ByteCodeStart), LiN, CoN, TokenTypes::Module));
+        AddNewLine();
+        break;
+      }
+      default:
+        ShowError(token, ErrorTypes::GarbageToken);
+      }
+    }
+    ++LP;
+  }
+}
 } // namespace
 
 void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
@@ -576,25 +647,6 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
       } else if (TypeOfToken == TokenTypes::gto) {
         if (Line.size() < 2)
           ShowError(Line.at(0), ErrorTypes::NoArgumentsForgtoCommand);
-        for (const auto Token : SliceStuff(1, Line.size() - 1, Line)) {
-          int ModID = GetAssignedModuleID(Token.LiteralToken);
-          LiN = Token.LineNum;
-          CoN = Token.ColNum;
-          if (ModID < 0)
-            ShowError(Token, ErrorTypes::IdentifierNotFound);
-          ModuleDT ModData = GetModuleMetaData(ModID);
-          ByteCode.push_back(
-              CreateByteCodeToken(std::to_string(ModData.ByteCodeStart), LiN,
-                                  CoN, TokenTypes::gotoln));
-          ByteCode.push_back(CreateByteCodeToken(std::to_string(ModID), -1, -1,
-                                                 TokenTypes::Module));
-          ByteCode.push_back({.LiteralToken = "",
-                              .LineNum = LiN,
-                              .ColNum = CoN,
-                              .TypeRepr = TokenTypes::NewLine});
-        }
-        continue;
-
       } else if (TypeOfToken == TokenTypes::rpt) {
         RPTStartLine.push(ByteCode.size());
         ByteCode.push_back(CreateByteCodeToken(

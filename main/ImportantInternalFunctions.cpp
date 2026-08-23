@@ -51,8 +51,8 @@ bool CheckIfValidGlobalVariable(
                                                                      : true;
 }
 
-ModuleDT GetModuleMetaData(const int &VariableID) {
-  return ModuleTable[VariableID];
+ModuleDT GetModuleMetaData(const int &ModuleID) {
+  return ModuleTable[ModuleID];
 }
 VariableDT *GetVariableMetaData(const int &VariableID) {
   return &(*c_VariableTable)[VariableID];
