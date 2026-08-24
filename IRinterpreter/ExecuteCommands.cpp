@@ -28,6 +28,31 @@ void ReleaseMemoryFromStream() {
   g_TotalMemPool.push(SrcV.MemorySlotsAssigned.front());
   SrcV.MemorySlotsAssigned.pop_front();
 }
+std::pair<TokenTypes, std::string> GetWholeDataFromStream() {
+  VariableDT &SrcV = *GetVariableMetaData(0);
+  std::string Data;
+  TokenTypes DataType;
+
+  auto ReleaseStream = [&]() {};
+  g_TotalMemPool.push(SrcV.MemorySlotsAssigned.front());
+  SrcV.MemorySlotsAssigned.pop_front();
+
+  while (true) {
+    if (SrcV.MemorySlotsAssigned.empty())
+      ShowError(ByteCode.at(BCP), ErrorTypes::StreamVarEmpty);
+    RawDataRepr TopData = SBMemory.at(SrcV.MemorySlotsAssigned.front());
+    if (TopData.DataType == TokenTypes::Unknown) {
+      ReleaseStream();
+      break;
+    }
+    Data += TopData.Data;
+    DataType = TopData.DataType;
+    ReleaseStream();
+  }
+  if (DataType == TokenTypes::CharVal && Data.size() > 1)
+    DataType = TokenTypes::StringVal;
+  return {DataType, Data};
+}
 void ValidateType(const int &MemoryAdr1, const int &MemoryAdr2) {
   RawDataRepr Var1 = SBMemory.at(MemoryAdr1), Var2 = SBMemory.at(MemoryAdr2);
   if (!(Var1.DataType == Var2.DataType ||
@@ -635,7 +660,6 @@ void Handlegotoln() {
     break;
   case (TokenTypes::Module):
     InterpreterModuleStack.push(BCP);
-    --BCP;
     // gotoln token contains the bytecode index to go
     BCP = std::stoi(ByteCode.at(BCP).LiteralToken);
     break;
@@ -662,9 +686,15 @@ void setCommand() {
 void HandleModule() {
   ++BCP;
   ByteCodeDT BCR = ByteCode.at(BCP);
+  int ModID = std::stoi(BCR.LiteralToken);
   // since the bytecode was validated, no need to check whether the code is
   // valid or not
-  c_VariableTable = &LocalModuleVariableTable[std::stoi(BCR.LiteralToken)];
+  ModuleDT ModMD = GetModuleMetaData(ModID);
+  c_VariableTable = &LocalModuleVariableTable[ModID];
+  for (size_t i = 0; i < ModMD.ParameterID.size(); ++i) {
+    auto [DT, Data] = GetWholeDataFromStream();
+    (*c_VariableTable)[ModMD.ParameterID.at(i)].DataType = DT;
+  }
 }
 void mlcCommand() {
   ++BCP;

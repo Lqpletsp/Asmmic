@@ -469,6 +469,7 @@ void HandleModuleCalls(const TokenizedLineDT &Line) {
       switch (Ttype) {
       case TokenTypes::Colon:
         LoadStreamComplete = true;
+        AddNewLine();
         break;
       case TokenTypes::StringVal:
       case TokenTypes::CharVal:
@@ -496,6 +497,7 @@ void HandleModuleCalls(const TokenizedLineDT &Line) {
       switch (Ttype) {
       case TokenTypes::Stopper:
         LoadStreamComplete = false;
+        AddNewLine();
         break;
       case TokenTypes::Identifier: {
         std::string ModName = token.LiteralToken;
@@ -504,8 +506,7 @@ void HandleModuleCalls(const TokenizedLineDT &Line) {
           ShowError(token, ErrorTypes::IdentifierNotFound);
 
         // Add tokens to call modules
-        ByteCode.push_back(
-            CreateByteCodeToken("", -1, -1, TokenTypes::NewLine));
+        ByteCode.push_back(CreateByteCodeToken("", -1, -1, TokenTypes::gotoln));
         ModuleDT ModMD = GetModuleMetaData(ModID);
         ByteCode.push_back(CreateByteCodeToken(
             std::to_string(ModMD.ByteCodeStart), LiN, CoN, TokenTypes::Module));
