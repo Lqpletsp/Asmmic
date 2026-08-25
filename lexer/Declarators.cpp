@@ -1,6 +1,7 @@
 #include "../errorhandling/ErrorHandler.h"
 #include "../main/ImportantInternalFunctions.h"
 #include "../main/types.h"
+#include <string>
 
 void DeclareMemory(const TokenizedLineDT &MemDecLine) {
   if (MemDecLine.size() != 1) {
@@ -48,11 +49,24 @@ void DeclareModules(const TokenizedLineDT &ModDecLine) {
   global = false;
   c_VariableTable = &l_VariableTable;
   c_MapVariableNameAndID = &l_MapVariableNameAndID;
+  ByteCode.push_back({.LiteralToken = "set",
+                      .LineNum = -1,
+                      .ColNum = -1,
+                      .TypeRepr = TokenTypes::set});
+  ByteCode.push_back({.LiteralToken = ":",
+                      .LineNum = -1,
+                      .ColNum = -1,
+                      .TypeRepr = TokenTypes::Colon});
   for (size_t i = 2; i < ModDecLine.size(); ++i) {
+    TokenDT token = ModDecLine.at(i);
+    int LiN = token.LineNum, CoN = token.ColNum;
     int VarID = GetVariableID();
-    (*c_MapVariableNameAndID)[ModDecLine.at(i).LiteralToken] = VarID;
+    (*c_MapVariableNameAndID)[token.LiteralToken] = VarID;
     (*c_VariableTable)[VarID] = parameter;
-    ModuleInfo.ParameterID.push_back(VarID);
+    ByteCode.push_back({.LiteralToken = std::to_string(VarID),
+                        .LineNum = LiN,
+                        .ColNum = CoN,
+                        .TypeRepr = TokenTypes::VariableID});
   }
   ModuleTable[ModID] = ModuleInfo;
   LocalModuleVariableTable[ModID] = {};

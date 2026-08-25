@@ -110,7 +110,6 @@ struct RawDataRepr {
 };
 struct ModuleDT {
   int ModuleID;
-  std::vector<int> ParameterID;
   int ByteCodeStart;
 };
 inline int CurrentModuleID = 0;

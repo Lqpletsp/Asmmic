@@ -62,6 +62,12 @@ void ValidateType(const int &MemoryAdr1, const int &MemoryAdr2) {
          Var2.DataType == TokenTypes::DoubleVal)))
     ShowError(ByteCode.at(BCP), ErrorTypes::InvalidDataTypeInVariable);
 }
+void ValidateType(const TokenTypes &T1, const TokenTypes &T2) {
+  if (!(T1 == T2 || (T1 == TokenTypes::DoubleVal && T2 == TokenTypes::IntVal) ||
+        (T1 == TokenTypes::IntVal && T2 == TokenTypes::DoubleVal)))
+    ShowError(ByteCode.at(BCP), ErrorTypes::InvalidDataTypeInVariable);
+}
+
 template <typename T> // only char or string as DataToStore
 void InsertDataInSB(const T &DataToStore, const TokenTypes &DataType) {
   // function only stores at stream
@@ -165,6 +171,18 @@ std::pair<int, int> ResolveArrays() {
 TokenTypes GetVariableDataType(const std::string &VarID) {
   return GetVariableMetaData(std::stoi(VarID))->DataType;
 }
+struct DataDT {
+  std::string Data;
+  TokenTypes DT;
+};
+struct VarDT {
+  int VarID;
+  int MAtoWrite; // only relevant if array
+};
+void StoreDataInVariables(const DataDT &DVal, const VarDT &VVal) {
+  VariableDT VarToWrite = *GetVariableMetaData(VVal.VarID);
+  ValidateDataTypes(DVal.DT, VarToWrite.DataType);
+}
 std::string GetArrayData() {
   // strings in arrays are handled by inserting the initial memory address to
   // the vector
@@ -195,7 +213,6 @@ void ResolveWriteMode() {
     TokenTypes CurrentTokenType = BCR.TypeRepr;
     switch (CurrentTokenType) {
     case TokenTypes::VariableID: {
-      // what if the DestV is char but the stream has string?
       VariableDT &SrcV = *GetVariableMetaData(0);
       VariableDT &DestV = *GetVariableMetaData(std::stoi(BCR.LiteralToken));
 
@@ -523,6 +540,7 @@ bool OperateBoolExpr() {
 
   return (EvalStack.top().Data == "T");
 }
+
 double OperateMathExpr() {
   // the function is called when MathExpr byte code
   BCP++;
@@ -691,10 +709,6 @@ void HandleModule() {
   // valid or not
   ModuleDT ModMD = GetModuleMetaData(ModID);
   c_VariableTable = &LocalModuleVariableTable[ModID];
-  for (size_t i = 0; i < ModMD.ParameterID.size(); ++i) {
-    auto [DT, Data] = GetWholeDataFromStream();
-    (*c_VariableTable)[ModMD.ParameterID.at(i)].DataType = DT;
-  }
 }
 void mlcCommand() {
   ++BCP;
