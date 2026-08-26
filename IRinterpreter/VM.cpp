@@ -11,7 +11,7 @@ void InterpretByteCode() {
   if (ByteCode.size() == 0)
     return;
   ByteCodeDT BCR = ByteCode.at(0);
-  while (BCR.TypeRepr != TokenTypes::ENDCODE) {
+  while (BCR.TypeRepr != TokenTypes::ENDCODE && BCP < ByteCode.size()) {
     EnumRepr = BCR.TypeRepr;
     switch (EnumRepr) {
     case TokenTypes::out:

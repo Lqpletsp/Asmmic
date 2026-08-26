@@ -146,6 +146,7 @@ std::pair<int, int> ResolveArrays() {
                    "PossibleErrorInLexer-NOTdisasmError\n";
       break;
     }
+
     ++BCP;
     if (!CheckIfAppBCP())
       break;
@@ -171,18 +172,7 @@ std::pair<int, int> ResolveArrays() {
 TokenTypes GetVariableDataType(const std::string &VarID) {
   return GetVariableMetaData(std::stoi(VarID))->DataType;
 }
-struct DataDT {
-  std::string Data;
-  TokenTypes DT;
-};
-struct VarDT {
-  int VarID;
-  int MAtoWrite; // only relevant if array
-};
-void StoreDataInVariables(const DataDT &DVal, const VarDT &VVal) {
-  VariableDT VarToWrite = *GetVariableMetaData(VVal.VarID);
-  ValidateDataTypes(DVal.DT, VarToWrite.DataType);
-}
+
 std::string GetArrayData() {
   // strings in arrays are handled by inserting the initial memory address to
   // the vector

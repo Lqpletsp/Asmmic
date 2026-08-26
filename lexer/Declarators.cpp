@@ -37,6 +37,19 @@ void DeclareModules(const TokenizedLineDT &ModDecLine) {
   TrackModuleDecLine.push(BCi - 1);
 
   ModuleDT ModuleInfo = {.ModuleID = ModID, .ByteCodeStart = BCi};
+  ByteCode.push_back({
+      .LiteralToken = "",
+      .LineNum = -1,
+      .ColNum = -1,
+      .TypeRepr = TokenTypes::NewLine,
+  });
+  ByteCode.push_back({
+      .LiteralToken = std::to_string(ModID),
+      .LineNum = -1,
+      .ColNum = -1,
+      .TypeRepr = TokenTypes::Module,
+  });
+
   if (ModDecLine.size() < 2)
     return;
   else if (ModDecLine.at(1).LiteralToken != ":")
@@ -70,12 +83,6 @@ void DeclareModules(const TokenizedLineDT &ModDecLine) {
   }
   ModuleTable[ModID] = ModuleInfo;
   LocalModuleVariableTable[ModID] = {};
-  ByteCode.push_back({
-      .LiteralToken = std::to_string(ModID),
-      .LineNum = -1,
-      .ColNum = -1,
-      .TypeRepr = TokenTypes::Module,
-  });
 }
 void DeclareVariable(const TokenizedLineDT &VarDecLine) {
   TokenTypes DataType;
@@ -135,14 +142,20 @@ void decCommand(const TokenizedLineDT &DecLine) {
   if (DecLine.size() < 2) { // takes line with command sliced
     return;
   }
+  auto CheckMemory = [&]() {
+    if (g_TotalMemPool.size() == 0)
+      ShowError(DecLine.at(0), ErrorTypes::MemoryFull);
+  };
   std::string MLC = DecLine.at(0).LiteralToken;
   TokenizedLineDT LineArguments = SliceStuff(1, DecLine.size() - 1, DecLine);
   if (MLC == ".mem")
     DeclareMemory(LineArguments);
   else if (MLC == ".var") {
-    if (g_TotalMemPool.size() == 0)
-      ShowError(DecLine.at(0), ErrorTypes::MemoryFull);
+    CheckMemory();
     DeclareVariable(LineArguments);
+  } else if (MLC == ".mod") {
+    CheckMemory();
+    DeclareModules(LineArguments);
   } else
     ShowError(DecLine.at(0), ErrorTypes::ExpectedAValidMidLineCommand);
 }
