@@ -50,6 +50,13 @@ void DeclareModules(const TokenizedLineDT &ModDecLine) {
       .TypeRepr = TokenTypes::Module,
   });
 
+  ByteCode.push_back({
+      .LiteralToken = "",
+      .LineNum = -1,
+      .ColNum = -1,
+      .TypeRepr = TokenTypes::NewLine,
+  });
+
   if (ModDecLine.size() < 2)
     return;
   else if (ModDecLine.at(1).LiteralToken != ":")

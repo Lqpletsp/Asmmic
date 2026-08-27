@@ -678,13 +678,11 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
           } else
             CMPStartLine = std::stack<int>();
 
-          LinePointer++;
-          continue;
+          break;
         } else if (Token.LiteralToken == ".all") {
           ByteCode.push_back(
               CreateByteCodeToken("", -1, -1, TokenTypes::ENDCODE));
-          LinePointer++;
-          continue;
+          break;
         } else if (Token.LiteralToken == ".rpt") {
           // assuming the most recent rpt line ended
           if (RPTStartLine.empty())
@@ -699,8 +697,7 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
           // add a bytecode to tell the program to go to the start of rpt
           // statement for loop
           RPTStartLine.pop();
-          LinePointer++;
-          continue;
+          break;
         } else if (Token.LiteralToken == ".mod") {
           if (TrackModuleDecLine.empty())
             ShowError(Token, ErrorTypes::ModuleTriedEndingButWasNotStarted);
@@ -717,6 +714,7 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
 
           ByteCode.at(TrackModuleDecLine.top()).LiteralToken =
               std::to_string(ByteCode.size());
+          break;
         }
       } else {
 

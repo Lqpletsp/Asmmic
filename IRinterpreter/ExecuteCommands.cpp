@@ -679,6 +679,7 @@ void Handlegotoln() {
       if (token.LiteralToken == "!") {
         BCP = InterpreterModuleStack.top();
         InterpreterModuleStack.pop();
+        c_VariableTable = &g_VariableTable;
       }
     }
     break;
@@ -692,7 +693,6 @@ void setCommand() {
   ResolveWriteMode();
 }
 void HandleModule() {
-  ++BCP;
   ByteCodeDT BCR = ByteCode.at(BCP);
   int ModID = std::stoi(BCR.LiteralToken);
   // since the bytecode was validated, no need to check whether the code is
