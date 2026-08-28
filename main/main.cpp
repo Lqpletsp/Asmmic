@@ -16,7 +16,6 @@ int main() {
   HandleLexer();
   std::cout << "________________________\n" << std::endl;
   InterpretByteCode();
-
   std::cout << "\n_________________________\n" << std::endl;
   PrintDetails();
   return 0;
@@ -24,7 +23,7 @@ int main() {
 
 void DebugFunction() {
   for (const ByteCodeDT BC : ByteCode) {
-    std::cout << static_cast<int>(BC.TypeRepr) << ' ' << BC.LiteralToken
+    std::cout << static_cast<int>(BC.TypeRepr) << "->" << BC.LiteralToken
               << std::endl;
   }
 }

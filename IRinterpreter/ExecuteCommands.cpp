@@ -666,18 +666,22 @@ void Handlegotoln() {
       BCP = std::stoi(ByteCode.at(FallBackBCP).LiteralToken);
     }
     break;
-  case (TokenTypes::Module):
+  case (TokenTypes::Module): {
     InterpreterModuleStack.push(BCP);
     // gotoln token contains the bytecode index to go
-    BCP = std::stoi(ByteCode.at(BCP).LiteralToken);
+    int ModID = std::stoi(ByteCode.at(BCP).LiteralToken);
+    ModuleDT Mod = GetModuleMetaData(ModID);
+    BCP = Mod.ByteCodeStart + 1;
     break;
+  }
   default:
     --BCP;
+    token = ByteCode.at(BCP);
     try {
-      BCP = std::stoi(ByteCode.at(BCP).LiteralToken);
+      BCP = std::stoi(token.LiteralToken);
     } catch (...) {
       if (token.LiteralToken == "!") {
-        BCP = InterpreterModuleStack.top();
+        BCP = InterpreterModuleStack.top() + 1;
         InterpreterModuleStack.pop();
         c_VariableTable = &g_VariableTable;
       }
