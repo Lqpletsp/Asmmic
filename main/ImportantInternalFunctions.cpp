@@ -45,8 +45,7 @@ TokenTypes DetermineDataType(const std::string &Token) {
   return TokenTypes::Unknown;
 }
 
-bool CheckIfValidGlobalVariable(
-    const int &VariableID) { // no functions so no local variables right now
+bool CheckIfValidGlobalVariable(const int &VariableID) {
   return (g_VariableTable.find(VariableID) == g_VariableTable.end()) ? false
                                                                      : true;
 }
@@ -55,6 +54,10 @@ ModuleDT GetModuleMetaData(const int &ModuleID) {
   return ModuleTable[ModuleID];
 }
 VariableDT *GetVariableMetaData(const int &VariableID) {
+  auto it = (*c_VariableTable).find(VariableID);
+  if (it == (*c_VariableTable).end()) {
+    return &g_VariableTable[VariableID];
+  }
   return &(*c_VariableTable)[VariableID];
 }
 
@@ -84,7 +87,11 @@ int GetModuleID() {
 int GetAssignedVariableID(const std::string &VariableName) {
   auto it = (*c_MapVariableNameAndID).find(VariableName);
   if (it == (*c_MapVariableNameAndID).end()) {
-    return -1; // Or whatever sentinel value you use for "not found"
+    auto it2 = g_MapVariableNameAndID.find(VariableName);
+    if (it2 == g_MapVariableNameAndID.end()) {
+      return -1;
+    }
+    return it2->second;
   }
   return it->second; // Return the actual ID stored in the map
 }

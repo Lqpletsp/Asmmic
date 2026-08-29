@@ -214,20 +214,23 @@ void ResolveWriteMode() {
       int SrcAddr = SrcV.MemorySlotsAssigned.front();
       int DestAddr;
       int MemorySlotCounter = 0;
+      TokenTypes SrcVDT = SBMemory.at(SrcAddr).DataType,
+                 DestVDT = DestV.DataType;
       if (DestV.MemorySlotsAssigned.empty()) {
         DestAddr = AllocateSBmemory();
-        if (DestV.DataType != TokenTypes::StringVal)
+        if (DestVDT != TokenTypes::StringVal && DestVDT != TokenTypes::Unknown)
           SBMemory.at(DestAddr).DataType = DestV.DataType;
-        else
+        else if (DestVDT == TokenTypes::StringVal)
           SBMemory.at(DestAddr).DataType = TokenTypes::CharVal;
+        else if (DestVDT == TokenTypes::Unknown)
+          SBMemory.at(DestAddr).DataType = SrcVDT;
+
         DestV.MemorySlotsAssigned.push_back(DestAddr);
       } else
         DestAddr = DestV.MemorySlotsAssigned.at(0);
 
       ValidateType(SrcAddr, DestV.MemorySlotsAssigned.front());
 
-      TokenTypes SrcVDT = SBMemory.at(SrcAddr).DataType,
-                 DestVDT = DestV.DataType;
       std::string Data;
 
       while (SBMemory.at(SrcAddr).DataType != TokenTypes::Unknown) {

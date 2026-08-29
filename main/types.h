@@ -97,11 +97,11 @@ struct VariableDT {
 // THIS IS THE MAIN CODE!!!
 inline std::string MAINCODE = R"(
   dec.mem 100; 
-  dec.mod MyMod; 
-    out "Hello world"; 
-  gto : MyMod; 
+  dec.mod MyMod : x; 
+    out x; 
   end.mod; 
-  gto : MyMod; 
+
+  gto 12 : MyMod; 
 )";
 
 inline std::vector<ByteCodeDT> ByteCode;
@@ -118,9 +118,13 @@ struct ModuleDT {
 };
 inline int CurrentModuleID = 0;
 inline int VarCount = 0;
-// when looking for identifiers inside a module, it first checks for local sand
-// box memory and then the global
-inline bool global = true; // if inside module, global = false
+inline std::string ErrorInstance = "CT";
+// CT -> Compile Time
+// IT -> Interpreting
+// when looking for identifiers inside a module, it first checks for local
+// sand box memory and then the global
+inline int BCP = -1;
+inline bool global = false;
 inline int TotalMemSize;
 inline std::stack<int> g_TotalMemPool;
 inline std::unordered_map<int, VariableDT> g_VariableTable; // global

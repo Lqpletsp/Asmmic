@@ -3,6 +3,20 @@
 #include "../main/types.h"
 #include <string>
 
+namespace {
+bool AppendVariableDetails(const std::string &VName, const bool &Array,
+                           const TokenTypes &DT) {
+  if (DT == TokenTypes::StringVal && Array)
+    return false;
+  VariableDT Variable{.DataType = DT, .Array = Array};
+
+  int VariableID = GetVariableID();
+  (*c_VariableTable)[VariableID] = Variable;
+  (*c_MapVariableNameAndID)[VName] = VariableID;
+  VarCount++;
+  return true;
+}
+} // namespace
 void DeclareMemory(const TokenizedLineDT &MemDecLine) {
   if (MemDecLine.size() != 1) {
     if (MemDecLine.empty()) {
@@ -79,10 +93,9 @@ void DeclareModules(const TokenizedLineDT &ModDecLine) {
                       .TypeRepr = TokenTypes::Colon});
   for (size_t i = 2; i < ModDecLine.size(); ++i) {
     TokenDT token = ModDecLine.at(i);
+    AppendVariableDetails(token.LiteralToken, false, TokenTypes::Unknown);
+    int VarID = (*c_MapVariableNameAndID)[token.LiteralToken];
     int LiN = token.LineNum, CoN = token.ColNum;
-    int VarID = GetVariableID();
-    (*c_MapVariableNameAndID)[token.LiteralToken] = VarID;
-    (*c_VariableTable)[VarID] = parameter;
     ByteCode.push_back({.LiteralToken = std::to_string(VarID),
                         .LineNum = LiN,
                         .ColNum = CoN,
@@ -132,14 +145,8 @@ void DeclareVariable(const TokenizedLineDT &VarDecLine) {
     else if (ValidateName(
                  LiteralToken)) { // if variable name. (dec .var ~i MyNum).
                                   // "MyNum" is valid variable name
-      if (DataType == TokenTypes::StringVal && Array)
+      if (!AppendVariableDetails(LiteralToken, Array, DataType))
         ShowError(token, ErrorTypes::AttemptedMultiDimensionalArrays);
-      VariableDT Variable{.DataType = DataType, .Array = Array};
-
-      int VariableID = GetVariableID();
-      (*c_VariableTable)[VariableID] = Variable;
-      (*c_MapVariableNameAndID)[LiteralToken] = VariableID;
-      VarCount++;
     } else
       ShowError(token, ErrorTypes::GarbageArgInACommand);
   }

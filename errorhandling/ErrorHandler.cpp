@@ -65,10 +65,11 @@ void ShowError(const TokenDT &Token, const ErrorTypes &Type) {
   }
 
   if (Token.LiteralToken == "" || Type == ErrorTypes::MemoryFull)
-    std::cout << "Err[ln:" << ErrLineNum << "]: " << std::endl;
+    std::cout << "Err[" << ErrorInstance << "@(ln:" << ErrLineNum << "||" << BCP
+              << ")]: " << std::endl;
   else
-    std::cout << "Err[ln:" << ErrLineNum
-              << "]: " << '"' + Token.LiteralToken + '"' << " was given.\n";
+    std::cout << "Err[" << ErrorInstance << "@(ln:" << ErrLineNum << "||" << BCP
+              << ")]: " << '"' + Token.LiteralToken + '"' << " was given.\n";
 
   std::cout << CorrespondingErrorStrings[Type] << std::endl;
   std::exit(1);
@@ -104,10 +105,11 @@ void ShowError(const ByteCodeDT &Token, const ErrorTypes &Type) {
     std::cout << std::string(BadToken.size(), '^') << "\n\n";
   }
   if (Token.LiteralToken == "" || Type == ErrorTypes::MemoryFull)
-    std::cout << "Err[ln:" << ErrLineNum << "]: ";
+    std::cout << "Err[" << ErrorInstance << "@(ln:" << ErrLineNum << "||" << BCP
+              << ")]: ";
   else
-    std::cout << "Err[ln:" << ErrLineNum << "]: " << '"' + BadToken + '"'
-              << " was given.\n";
+    std::cout << "Err[" << ErrorInstance << "@(ln:" << ErrLineNum << "||" << BCP
+              << ")]: " << '"' + BadToken + '"' << " was given.\n";
   std::cout << CorrespondingErrorStrings[Type] << std::endl;
   std::exit(1);
 }

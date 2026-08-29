@@ -2,7 +2,6 @@
 #include "../errorhandling/ErrorHandler.h"
 #include "../main/types.h"
 #include "ExecuteCommands.h"
-#include <iostream>
 #include <vector>
 
 void InterpretByteCode() {
@@ -40,5 +39,4 @@ void InterpretByteCode() {
       return;
     BCR = ByteCode.at(BCP);
   }
-  std::cout << '\n';
 }

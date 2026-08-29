@@ -6,17 +6,20 @@
 void DebugFunction();
 
 void PrintDetails() {
+  std::cout << "________________________\n" << std::endl;
   std::cout << "Memory declared: " << TotalMemSize << " spaces" << std::endl;
   std::cout << "Memory remaining: " << g_TotalMemPool.size() << " spaces"
             << std::endl;
   std::cout << "Total variable count: " << VarCount << std::endl;
+  std::cout << "________________________\n" << std::endl;
 }
 
 int main() {
   HandleLexer();
-  std::cout << "________________________\n" << std::endl;
+  DebugFunction();
+  return 0;
+  ErrorInstance = "IT";
   InterpretByteCode();
-  std::cout << "\n_________________________\n" << std::endl;
   PrintDetails();
   return 0;
 }

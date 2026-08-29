@@ -146,7 +146,7 @@ std::string GetStrModuleID(const std::string &ModuleName) {
 }
 std::string GetStrVariableID(const std::string &VariableName) {
   int VariableID = GetAssignedVariableID(VariableName);
-  if (VariableID < 0 || !CheckIfValidGlobalVariable(VariableID))
+  if (VariableID < 0 && !CheckIfValidGlobalVariable(VariableID))
     return "!"; // means the variable does not exist
   std::stringstream ss;
   ss << std::fixed << (*c_MapVariableNameAndID)[VariableName];
@@ -156,12 +156,14 @@ std::string GetStrVariableID(const std::string &VariableName) {
 template <typename T> int HandleVariables(const T &Line, TokenDT &Token) {
   int LinePointer = 0, LiN = Token.LineNum, CoN = Token.ColNum;
   int VariableID = GetAssignedVariableID(Token.LiteralToken);
-  if (VariableID < 0 || !CheckIfValidGlobalVariable(VariableID))
+  if (VariableID < 0 && !CheckIfValidGlobalVariable(VariableID)) {
     ShowError(Token, ErrorTypes::IdentifierNotFound);
+  }
   VariableDT &VariableMetaData = *GetVariableMetaData(VariableID);
   std::string VarName = GetStrVariableID(Token.LiteralToken);
-  if (VarName == "!")
+  if (VarName == "!") {
     ShowError(Token, ErrorTypes::IdentifierNotFound);
+  }
   if (VariableMetaData.Array) {
     ByteCode.push_back(
         CreateByteCodeToken(VarName, LiN, CoN, TokenTypes::ArrayHint));
@@ -533,7 +535,9 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
       ShowError(Line.at(0), ErrorTypes::NoCommandInFrontofLine);
     } else if (Line.at(0).LiteralToken == "dec") {
       TokenizedLineDT SlicedLine = SliceStuff(1, Line.size() - 1, Line);
+      ErrorInstance = "DT";
       decCommand(SlicedLine);
+      ErrorInstance = "CT";
       continue;
     }
     int LinePointer = 0;
