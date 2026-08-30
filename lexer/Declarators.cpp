@@ -37,6 +37,14 @@ void DeclareMemory(const TokenizedLineDT &MemDecLine) {
   g_VariableTable[VariableIDTemp] = tempVar;
 }
 void DeclareModules(const TokenizedLineDT &ModDecLine) {
+  auto AddNewLine = [&]() {
+    ByteCode.push_back({
+        .LiteralToken = "",
+        .LineNum = -1,
+        .ColNum = -1,
+        .TypeRepr = TokenTypes::NewLine,
+    });
+  };
   if (ModDecLine.empty())
     return;
   int ModID = GetModuleID();
@@ -51,12 +59,7 @@ void DeclareModules(const TokenizedLineDT &ModDecLine) {
   TrackModuleDecLine.push(BCi - 1);
 
   ModuleDT ModuleInfo = {.ModuleID = ModID, .ByteCodeStart = BCi};
-  ByteCode.push_back({
-      .LiteralToken = "",
-      .LineNum = -1,
-      .ColNum = -1,
-      .TypeRepr = TokenTypes::NewLine,
-  });
+  AddNewLine();
   ByteCode.push_back({
       .LiteralToken = std::to_string(ModID),
       .LineNum = -1,
@@ -64,12 +67,7 @@ void DeclareModules(const TokenizedLineDT &ModDecLine) {
       .TypeRepr = TokenTypes::Module,
   });
 
-  ByteCode.push_back({
-      .LiteralToken = "",
-      .LineNum = -1,
-      .ColNum = -1,
-      .TypeRepr = TokenTypes::NewLine,
-  });
+  AddNewLine();
 
   if (ModDecLine.size() < 2)
     return;
@@ -101,6 +99,7 @@ void DeclareModules(const TokenizedLineDT &ModDecLine) {
                         .ColNum = CoN,
                         .TypeRepr = TokenTypes::VariableID});
   }
+  AddNewLine();
   ModuleTable[ModID] = ModuleInfo;
   LocalModuleVariableTable[ModID] = {};
 }

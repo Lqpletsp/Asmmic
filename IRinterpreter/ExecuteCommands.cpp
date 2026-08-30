@@ -1,7 +1,6 @@
 #include "../errorhandling/ErrorHandler.h"
 #include "../main/ImportantInternalFunctions.h"
 #include "../main/types.h"
-#include "VM.h"
 #include <iostream>
 #include <stack>
 #include <string>
@@ -222,8 +221,10 @@ void ResolveWriteMode() {
           SBMemory.at(DestAddr).DataType = DestV.DataType;
         else if (DestVDT == TokenTypes::StringVal)
           SBMemory.at(DestAddr).DataType = TokenTypes::CharVal;
-        else if (DestVDT == TokenTypes::Unknown)
+        else if (DestVDT == TokenTypes::Unknown) {
           SBMemory.at(DestAddr).DataType = SrcVDT;
+          DestV.DataType = SrcVDT;
+        }
 
         DestV.MemorySlotsAssigned.push_back(DestAddr);
       } else
@@ -607,7 +608,7 @@ void ResolveReadMode(TokenTypes cmd) {
   Mode CurrentState = Read;
   bool NoOtherThanInt = cmd == TokenTypes::mlc;
   while ((BCR.TypeRepr != TokenTypes::NewLine &&
-          BCR.TypeRepr != TokenTypes::ENDCODE) ||
+          BCR.TypeRepr != TokenTypes::ENDCODE) &&
          CurrentState == Read) { // no issue on the first iteration
 
     auto [Dat, DTP] = GetDataFromToken();

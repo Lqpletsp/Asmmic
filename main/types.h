@@ -100,8 +100,8 @@ inline std::string MAINCODE = R"(
   dec.mod MyMod : x; 
     out x; 
   end.mod; 
-
-  gto 12 : MyMod; 
+  
+  gto 12 : MyMod;
 )";
 
 inline std::vector<ByteCodeDT> ByteCode;
