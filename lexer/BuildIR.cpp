@@ -152,7 +152,9 @@ std::string GetStrVariableID(const std::string &VariableName) {
   ss << std::fixed << (*c_MapVariableNameAndID)[VariableName];
   return ss.str();
 }
-
+std::string FormatStringsAndChars(const std::string &LV) {
+  return SliceStuff(1, LV.size() - 2, LV);
+}
 template <typename T> int HandleVariables(const T &Line, TokenDT &Token) {
   int LinePointer = 0, LiN = Token.LineNum, CoN = Token.ColNum;
   int VariableID = GetAssignedVariableID(Token.LiteralToken);
@@ -476,6 +478,9 @@ void HandleModuleCalls(const TokenizedLineDT &Line) {
         break;
       case TokenTypes::StringVal:
       case TokenTypes::CharVal:
+        ByteCode.push_back(CreateByteCodeToken(
+            FormatStringsAndChars(token.LiteralToken), LiN, CoN, Ttype));
+        break;
       case TokenTypes::IntVal:
       case TokenTypes::DoubleVal:
       case TokenTypes::TrueVal:
@@ -724,8 +729,7 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
 
         if (TypeOfToken == TokenTypes::StringVal ||
             TypeOfToken == TokenTypes::CharVal) {
-          LiteralString =
-              SliceStuff(1, Token.LiteralToken.size() - 2, Token.LiteralToken);
+          LiteralString = FormatStringsAndChars(Token.LiteralToken);
         } else
           LiteralString = Token.LiteralToken;
       }

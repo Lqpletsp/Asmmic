@@ -222,10 +222,22 @@ void ResolveWriteMode() {
         else if (DestVDT == TokenTypes::StringVal)
           SBMemory.at(DestAddr).DataType = TokenTypes::CharVal;
         else if (DestVDT == TokenTypes::Unknown) {
-          SBMemory.at(DestAddr).DataType = SrcVDT;
-          DestV.DataType = SrcVDT;
-        }
+          // to handle parameters or auto typed variables
+          if (SrcV.MemorySlotsAssigned.size() > 1 &&
+              SrcVDT == TokenTypes::CharVal) {
+            SrcAddr = SrcV.MemorySlotsAssigned.at(2);
+            SrcVDT = SBMemory.at(SrcAddr).DataType;
+            if (SrcVDT == TokenTypes::CharVal)
+              DestV.DataType = TokenTypes::StringVal;
+            else
+              DestV.DataType = SrcVDT;
+            SrcAddr = SrcV.MemorySlotsAssigned.front();
+            SrcVDT = SBMemory.at(SrcAddr).DataType;
+          } else
+            DestV.DataType = SrcVDT;
 
+          SBMemory.at(DestAddr).DataType = SrcVDT;
+        }
         DestV.MemorySlotsAssigned.push_back(DestAddr);
       } else
         DestAddr = DestV.MemorySlotsAssigned.at(0);
@@ -286,6 +298,7 @@ void ResolveWriteMode() {
     }
 
     default:
+      std::cout << "HERE" << std::endl;
       ShowError(BCR, ErrorTypes::GarbageArgInACommand);
       break;
     }
@@ -346,6 +359,7 @@ std::pair<std::string, TokenTypes> GetDataFromToken() {
     Data = "-";
     break;
   default:
+    std::cout << static_cast<int>(BCR.TypeRepr);
     ShowError(BCR, ErrorTypes::GarbageArgInACommand);
     break;
   }
@@ -603,7 +617,7 @@ double OperateMathExpr() {
   return EvalStack.top();
 }
 
-void ResolveReadMode(TokenTypes cmd) {
+bool ResolveReadMode(TokenTypes cmd) {
   ByteCodeDT BCR = ByteCode.at(BCP); // no issue here
   Mode CurrentState = Read;
   bool NoOtherThanInt = cmd == TokenTypes::mlc;
@@ -619,10 +633,10 @@ void ResolveReadMode(TokenTypes cmd) {
     InsertWholeDataInSB(Dat, DTP);
     ++BCP;
     if (!CheckIfAppBCP())
-      return;
+      return false;
     BCR = ByteCode.at(BCP);
   }
-  ++BCP;
+  return (CurrentState == Write) ? true : false;
 }
 std::pair<std::string, TokenTypes> GetTopStreamData() {
   VariableDT &SrcV = *GetVariableMetaData(0);
@@ -695,10 +709,10 @@ void Handlegotoln() {
 }
 void setCommand() {
   ++BCP;
-  ResolveReadMode(TokenTypes::set);
-  if (!CheckIfAppBCP())
-    return;
-  ResolveWriteMode();
+  if (ResolveReadMode(TokenTypes::set)) {
+    ++BCP;
+    ResolveWriteMode();
+  }
 }
 void HandleModule() {
   ByteCodeDT BCR = ByteCode.at(BCP);
