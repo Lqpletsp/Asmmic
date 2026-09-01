@@ -84,6 +84,7 @@ void InsertWholeDataInSB(const std::string &Data, const TokenTypes &DT) {
     for (const char ch : Data) {
       InsertDataInSB(ch, TokenTypes::CharVal);
     }
+
     break;
   case (TokenTypes::IntVal):
   case (TokenTypes::TrueVal):
@@ -93,7 +94,7 @@ void InsertWholeDataInSB(const std::string &Data, const TokenTypes &DT) {
     InsertDataInSB(Data, DT);
     break;
   default:
-    std::cout << "FAILED:InsertWholeDataInSB;TTYPE" << static_cast<int>(DT);
+    std::cout << "FAILED:InsertWholeDataInSB;TTYPE:" << static_cast<int>(DT);
 
     break;
   }
@@ -139,8 +140,6 @@ std::pair<int, int> ResolveArrays() {
       break;
     }
     default:
-      std::cout << BCR.LiteralToken << std::endl;
-      std::cout << static_cast<int>(BCR.TypeRepr) << std::endl;
       std::cout << "--INVALID--ResolveArrays()-TypeMismatch-"
                    "PossibleErrorInLexer-NOTdisasmError\n";
       break;
@@ -225,14 +224,15 @@ void ResolveWriteMode() {
           // to handle parameters or auto typed variables
           if (SrcV.MemorySlotsAssigned.size() > 1 &&
               SrcVDT == TokenTypes::CharVal) {
-            SrcAddr = SrcV.MemorySlotsAssigned.at(2);
+            SrcAddr = SrcV.MemorySlotsAssigned.at(1);
             SrcVDT = SBMemory.at(SrcAddr).DataType;
-            if (SrcVDT == TokenTypes::CharVal)
+            if (SrcVDT == TokenTypes::CharVal) {
               DestV.DataType = TokenTypes::StringVal;
-            else
-              DestV.DataType = SrcVDT;
+            }
             SrcAddr = SrcV.MemorySlotsAssigned.front();
             SrcVDT = SBMemory.at(SrcAddr).DataType;
+            if (DestV.DataType == TokenTypes::Unknown)
+              DestV.DataType = SrcVDT;
           } else
             DestV.DataType = SrcVDT;
 
@@ -298,7 +298,6 @@ void ResolveWriteMode() {
     }
 
     default:
-      std::cout << "HERE" << std::endl;
       ShowError(BCR, ErrorTypes::GarbageArgInACommand);
       break;
     }
@@ -331,9 +330,10 @@ std::pair<std::string, TokenTypes> GetDataFromToken() {
   case TokenTypes::VariableID: {
     VariableDT &srcVar = *GetVariableMetaData(std::stoi(BCR.LiteralToken));
     int DataMAdr;
-    for (int idx = 0; idx < srcVar.MemorySlotsAssigned.size(); idx++) {
+    Data = "";
+    for (int idx = 0; idx < srcVar.MemorySlotsAssigned.size(); ++idx) {
       DataMAdr = srcVar.MemorySlotsAssigned.at(idx);
-      Data = SBMemory.at(DataMAdr).Data;
+      Data += SBMemory.at(DataMAdr).Data;
     }
     type = srcVar.DataType;
     break;
@@ -359,7 +359,6 @@ std::pair<std::string, TokenTypes> GetDataFromToken() {
     Data = "-";
     break;
   default:
-    std::cout << static_cast<int>(BCR.TypeRepr);
     ShowError(BCR, ErrorTypes::GarbageArgInACommand);
     break;
   }

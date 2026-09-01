@@ -97,9 +97,10 @@ struct VariableDT {
 // THIS IS THE MAIN CODE!!!
 inline std::string MAINCODE = R"(
   dec.mem 100; 
-  dec.mod MyMod : Name; 
+  dec.mod MyMod : x; 
+    out x; 
   end.mod; 
-  gto "Sajal" : MyMod;
+  gto "Hi" : MyMod; 
 )";
 
 inline std::vector<ByteCodeDT> ByteCode;
