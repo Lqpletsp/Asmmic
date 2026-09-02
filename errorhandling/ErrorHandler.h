@@ -107,7 +107,7 @@ inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
     {ErrorTypes::PastCMPstatementsStartedbutNotEnded,
      "Older cmp branches were begun but were not ended"},
     {ErrorTypes::CMPstatementendedbutnotstarted,
-     "rpt statement tried to end but was not started"},
+     "cmp statement tried to end but was not started"},
     {ErrorTypes::ArgForeleCommand,
      "ele command does not expect any arguments but was given"},
     {ErrorTypes::IndependenteleCommand,

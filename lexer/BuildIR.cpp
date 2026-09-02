@@ -462,12 +462,14 @@ void HandleModuleCalls(const TokenizedLineDT &Line) {
                         .ColNum = -1,
                         .TypeRepr = TokenTypes::NewLine});
   };
+
   while (LP < Line.size()) {
     TokenDT token = Line.at(LP);
+    std::cout << token.LiteralToken << std::endl;
     TokenTypes Ttype = DetermineType(token.LiteralToken);
     int LiN = token.LineNum, CoN = token.ColNum;
-
     if (!LoadStreamComplete) {
+
       if (Ttype != TokenTypes::Colon)
         ByteCode.push_back(CreateByteCodeToken("set", -1, -1, TokenTypes::set));
 
@@ -494,6 +496,7 @@ void HandleModuleCalls(const TokenizedLineDT &Line) {
         break;
       case TokenTypes::Identifier:
         LP += HandleVariables(SLine, token);
+        --LP;
         break;
       default:
         ShowError(token, ErrorTypes::GarbageToken);
@@ -506,9 +509,9 @@ void HandleModuleCalls(const TokenizedLineDT &Line) {
       case TokenTypes::Identifier: {
         std::string ModName = token.LiteralToken;
         int ModID = GetAssignedModuleID(ModName);
-        if (ModID < 0)
+        if (ModID < 0) {
           ShowError(token, ErrorTypes::IdentifierNotFound);
-
+        }
         ByteCode.push_back(CreateByteCodeToken("", -1, -1, TokenTypes::gotoln));
         ModuleDT ModMD = GetModuleMetaData(ModID);
         ByteCode.push_back(CreateByteCodeToken(
@@ -522,6 +525,7 @@ void HandleModuleCalls(const TokenizedLineDT &Line) {
     AddNewLine();
     ++LP;
   }
+  std::cout << "TESTComplete" << std::endl;
 }
 } // namespace
 
@@ -723,6 +727,7 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
 
           ByteCode.at(TrackModuleDecLine.top()).LiteralToken =
               std::to_string(ByteCode.size());
+          TrackModuleDecLine.pop();
           break;
         }
       } else {
