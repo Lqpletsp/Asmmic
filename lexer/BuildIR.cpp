@@ -465,7 +465,6 @@ void HandleModuleCalls(const TokenizedLineDT &Line) {
 
   while (LP < Line.size()) {
     TokenDT token = Line.at(LP);
-    std::cout << token.LiteralToken << std::endl;
     TokenTypes Ttype = DetermineType(token.LiteralToken);
     int LiN = token.LineNum, CoN = token.ColNum;
     if (!LoadStreamComplete) {
@@ -493,6 +492,7 @@ void HandleModuleCalls(const TokenizedLineDT &Line) {
       case TokenTypes::clc:
       case TokenTypes::evl:
         LP += HandleShuntingYard(SLine, token.LiteralToken);
+        --LP;
         break;
       case TokenTypes::Identifier:
         LP += HandleVariables(SLine, token);
@@ -525,7 +525,6 @@ void HandleModuleCalls(const TokenizedLineDT &Line) {
     AddNewLine();
     ++LP;
   }
-  std::cout << "TESTComplete" << std::endl;
 }
 } // namespace
 
@@ -676,7 +675,7 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
             ShowError(Token, ErrorTypes::PastCMPstatementsStartedbutNotEnded);
           ByteCode.at(CMPStartLine.top()).LiteralToken =
               std::to_string(ByteCode.size());
-          if (CMPBlockCodeFinish.empty())
+          if (CMPStartLine.empty())
             ShowError(Token, ErrorTypes::CMPstatementendedbutnotstarted);
           while (!CMPBlockCodeFinish.empty()) {
             ByteCode.at(CMPBlockCodeFinish.back()).LiteralToken =

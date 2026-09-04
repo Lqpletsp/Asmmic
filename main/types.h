@@ -98,8 +98,11 @@ struct VariableDT {
 inline std::string MAINCODE = R"(
   dec.mem 100; 
   dec.mod RecurModTst : x;
-    out x; 
-    gto x : RecurModTst;     
+    cmp.evl x < 10; 
+      set.clc x + 1 ] : x; 
+      out x; 
+      gto x : RecurModTst;     
+    end.cmp; 
   end.mod; 
 
   gto 0 : RecurModTst; 
