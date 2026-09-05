@@ -2,13 +2,8 @@
 #include "../main/ImportantInternalFunctions.h"
 #include "../main/types.h"
 #include "Declarators.h"
-#include <deque>
 #include <iostream>
 #include <sstream>
-#include <stack>
-#include <string>
-#include <unordered_map>
-#include <vector>
 
 namespace {
 

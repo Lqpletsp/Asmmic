@@ -4,7 +4,6 @@
 #include <array>
 #include <iterator>
 #include <sstream>
-#include <string>
 ModuleDT GetModuleMetaData(const int &VariableID);
 int GetAssignedModuleID(const std::string &ModuleName);
 int SMalloc();

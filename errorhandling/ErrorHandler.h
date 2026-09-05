@@ -1,8 +1,6 @@
 #pragma once
 #include "../main/types.h"
 #include <cerrno>
-#include <string>
-#include <unordered_map>
 
 enum class ErrorTypes {
   CommandNotFound,

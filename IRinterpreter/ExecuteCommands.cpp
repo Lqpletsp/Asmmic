@@ -2,10 +2,7 @@
 #include "../main/ImportantInternalFunctions.h"
 #include "../main/types.h"
 #include <iostream>
-#include <stack>
-#include <string>
 #include <utility>
-#include <vector>
 
 namespace {
 double OperateMathExpr();

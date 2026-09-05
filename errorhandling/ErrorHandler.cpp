@@ -2,8 +2,6 @@
 #include "../main/types.h"
 #include <cstdlib>
 #include <iostream>
-#include <string>
-#include <vector>
 
 namespace {
 std::vector<std::string> SplitLines() {

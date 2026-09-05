@@ -2,7 +2,6 @@
 #include "../errorhandling/ErrorHandler.h"
 #include "../main/types.h"
 #include "ExecuteCommands.h"
-#include <vector>
 
 void InterpretByteCode() {
   BCP = 0;
