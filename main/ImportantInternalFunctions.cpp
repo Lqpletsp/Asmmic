@@ -1,7 +1,6 @@
 #include "types.h"
 #include <algorithm>
 #include <sstream>
-#include <string>
 
 int SMalloc() { // SMalloc -> Sandbox Memory allocation
   if (g_TotalMemPool.empty())

@@ -1,4 +1,3 @@
-#include "VM.h"
 #include "../errorhandling/ErrorHandler.h"
 #include "../main/types.h"
 #include "ExecuteCommands.h"
