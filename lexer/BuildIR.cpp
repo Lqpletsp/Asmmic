@@ -435,8 +435,8 @@ void HandleincAnddec(const TokenizedLineDT &Line, const std::string &cmd) {
   TokenTypes command = (cmd == "inc") ? TokenTypes::Add : TokenTypes::Min;
   int LP = 0;
   auto AddinitialBC = []() {
-    ByteCode.push_back({"set", -1, -1, TokenTypes::set});
-    ByteCode.push_back({"MathStart", -1, -1, TokenTypes::MathExpr});
+    ByteCode.push_back({"", -1, -1, TokenTypes::set});
+    ByteCode.push_back({"", -1, -1, TokenTypes::MathExpr});
   };
   while (LP < Line.size()) {
     TokenDT token = Line.at(LP);
@@ -448,17 +448,17 @@ void HandleincAnddec(const TokenizedLineDT &Line, const std::string &cmd) {
       AddinitialBC();
       ByteCode.push_back({token.LiteralToken, LiN, CoN, Ttype});
       ByteCode.push_back({"1", -1, -1, TokenTypes::IntVal});
-      ByteCode.push_back({"inc/dec", -1, -1, command});
-      ByteCode.push_back({"MathEnd", -1, -1, TokenTypes::MathExprEnd});
+      ByteCode.push_back({"", -1, -1, command});
+      ByteCode.push_back({"", -1, -1, TokenTypes::MathExprEnd});
       break;
     case TokenTypes::Identifier:
       AddinitialBC();
       LP += HandleVariables(SliceStuff(LP, Line.size() - 1, Line), token);
       --LP;
       ByteCode.push_back({"1", -1, -1, TokenTypes::IntVal});
-      ByteCode.push_back({"inc/dec", -1, -1, command});
-      ByteCode.push_back({"MathEnd", -1, -1, TokenTypes::MathExprEnd});
-      ByteCode.push_back({"Colon", -1, -1, TokenTypes::Colon});
+      ByteCode.push_back({"", -1, -1, command});
+      ByteCode.push_back({"", -1, -1, TokenTypes::MathExprEnd});
+      ByteCode.push_back({"", -1, -1, TokenTypes::Colon});
       LP += HandleVariables(SliceStuff(LP, Line.size() - 1, Line), token);
       --LP;
       break;
