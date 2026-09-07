@@ -52,6 +52,8 @@ enum class TokenTypes {
   And,
   Or,
   Not,
+  inc,
+  dec,
   LessThan,
   GreaterThan,
   Equal,
@@ -66,7 +68,7 @@ enum class TokenTypes {
   // commands
   out,
   inp,
-  dec,
+  ini,
   set,
   mlc,
   gotoln,
@@ -96,6 +98,11 @@ struct VariableDT {
 };
 // THIS IS THE MAIN CODE!!!
 inline std::string MAINCODE = R"(
+  ini.mem 100; 
+  ini.var ~i x; 
+  set 0 : x;
+  inc x; 
+  out x; 
 )";
 
 inline std::vector<ByteCodeDT> ByteCode;

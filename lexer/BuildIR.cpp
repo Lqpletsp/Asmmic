@@ -12,41 +12,24 @@ bool IsMathOperator(TokenTypes &type) {
 }
 
 std::unordered_map<std::string, TokenTypes> MapStringAndCommand = {
-    {"clc", TokenTypes::clc},
-    {"evl", TokenTypes::evl},
-    {"set", TokenTypes::set},
-    {"dec", TokenTypes::dec},
-    {"mlc", TokenTypes::mlc},
-    {"and", TokenTypes::And},
-    {"not", TokenTypes::Not},
-    {"out", TokenTypes::out},
-    {"rpt", TokenTypes::rpt},
-    {"cmp", TokenTypes::cmp},
-    {"end", TokenTypes::end},
-    {"<=", TokenTypes::LessEqual},
-    {">=", TokenTypes::GreaterEqual},
-    {"<", TokenTypes::LessThan},
-    {">", TokenTypes::GreaterThan},
-    {"orr", TokenTypes::Or},
-    {"@", TokenTypes::MemoryAddressIndicator},
-    {"!=", TokenTypes::NotEqual},
-    {"(", TokenTypes::Parenthesis},
-    {")", TokenTypes::Parenthesis},
-    {"+", TokenTypes::Add},
-    {"-", TokenTypes::Min},
-    {"*", TokenTypes::Mlt},
-    {"/", TokenTypes::Div},
-    {":", TokenTypes::Colon},
-    {"]", TokenTypes::Stopper},
-    {"T", TokenTypes::TrueVal},
-    {"F", TokenTypes::FalseVal},
-    {"==", TokenTypes::Equal},
-    {"=", TokenTypes::Equal},
-    {"elf", TokenTypes::elf},
-    {"ele", TokenTypes::ele},
-    {".", TokenTypes::Period},
-    {"gto", TokenTypes::gto},
-};
+    {"clc", TokenTypes::clc},       {"evl", TokenTypes::evl},
+    {"set", TokenTypes::set},       {"dec", TokenTypes::dec},
+    {"ini", TokenTypes::ini},       {"mlc", TokenTypes::mlc},
+    {"and", TokenTypes::And},       {"not", TokenTypes::Not},
+    {"out", TokenTypes::out},       {"rpt", TokenTypes::rpt},
+    {"cmp", TokenTypes::cmp},       {"end", TokenTypes::end},
+    {"<=", TokenTypes::LessEqual},  {">=", TokenTypes::GreaterEqual},
+    {"<", TokenTypes::LessThan},    {">", TokenTypes::GreaterThan},
+    {"orr", TokenTypes::Or},        {"@", TokenTypes::MemoryAddressIndicator},
+    {"!=", TokenTypes::NotEqual},   {"(", TokenTypes::Parenthesis},
+    {")", TokenTypes::Parenthesis}, {"+", TokenTypes::Add},
+    {"-", TokenTypes::Min},         {"*", TokenTypes::Mlt},
+    {"/", TokenTypes::Div},         {":", TokenTypes::Colon},
+    {"]", TokenTypes::Stopper},     {"T", TokenTypes::TrueVal},
+    {"F", TokenTypes::FalseVal},    {"==", TokenTypes::Equal},
+    {"=", TokenTypes::Equal},       {"elf", TokenTypes::elf},
+    {"ele", TokenTypes::ele},       {".", TokenTypes::Period},
+    {"gto", TokenTypes::gto},       {"inc", TokenTypes::inc}};
 
 bool CheckIfCommand(const TokenTypes &EnumTokenVal) {
   switch (EnumTokenVal) {
@@ -61,6 +44,8 @@ bool CheckIfCommand(const TokenTypes &EnumTokenVal) {
   case TokenTypes::ele:
   case TokenTypes::elf:
   case TokenTypes::gto:
+  case TokenTypes::ini:
+  case TokenTypes::inc:
     return true;
   default:
     return false;
@@ -446,6 +431,44 @@ int HandleShuntingYard(const TokenizedLineDT &Line, const std::string &cmd) {
 
   return InterruptedPtr + 2;
 }
+void HandleincAnddec(const TokenizedLineDT &Line, const std::string &cmd) {
+  TokenTypes command = (cmd == "inc") ? TokenTypes::Add : TokenTypes::Min;
+  int LP = 0;
+  auto AddinitialBC = []() {
+    ByteCode.push_back({"set", -1, -1, TokenTypes::set});
+    ByteCode.push_back({"MathStart", -1, -1, TokenTypes::MathExpr});
+  };
+  while (LP < Line.size()) {
+    TokenDT token = Line.at(LP);
+    TokenTypes Ttype = DetermineType(token.LiteralToken);
+    int LiN = token.LineNum, CoN = token.ColNum;
+    switch (Ttype) {
+    case TokenTypes::IntVal:
+    case TokenTypes::DoubleVal:
+      AddinitialBC();
+      ByteCode.push_back({token.LiteralToken, LiN, CoN, Ttype});
+      ByteCode.push_back({"1", -1, -1, TokenTypes::IntVal});
+      ByteCode.push_back({"inc/dec", -1, -1, command});
+      ByteCode.push_back({"MathEnd", -1, -1, TokenTypes::MathExprEnd});
+      break;
+    case TokenTypes::Identifier:
+      AddinitialBC();
+      LP += HandleVariables(SliceStuff(LP, Line.size() - 1, Line), token);
+      --LP;
+      ByteCode.push_back({"1", -1, -1, TokenTypes::IntVal});
+      ByteCode.push_back({"inc/dec", -1, -1, command});
+      ByteCode.push_back({"MathEnd", -1, -1, TokenTypes::MathExprEnd});
+      ByteCode.push_back({"Colon", -1, -1, TokenTypes::Colon});
+      LP += HandleVariables(SliceStuff(LP, Line.size() - 1, Line), token);
+      --LP;
+      break;
+    default:
+      ShowError(token, ErrorTypes::GarbageToken);
+    }
+    ByteCode.push_back({"", -1, -1, TokenTypes::NewLine});
+    ++LP;
+  }
+}
 void HandleModuleCalls(const TokenizedLineDT &Line) {
   bool LoadStreamComplete = false;
   int LP = 0;
@@ -535,7 +558,7 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
       continue;
     else if (!CheckIfCommand(DetermineType(Line.at(0).LiteralToken))) {
       ShowError(Line.at(0), ErrorTypes::NoCommandInFrontofLine);
-    } else if (Line.at(0).LiteralToken == "dec") {
+    } else if (Line.at(0).LiteralToken == "ini") {
       TokenizedLineDT SlicedLine = SliceStuff(1, Line.size() - 1, Line);
       ErrorInstance = "DT";
       decCommand(SlicedLine);
@@ -651,6 +674,11 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
         if (Line.size() < 2)
           ShowError(Line.at(0), ErrorTypes::NoArgumentsForgtoCommand);
         HandleModuleCalls(SliceStuff(1, Line.size() - 1, Line));
+        break;
+      } else if (TypeOfToken == TokenTypes::inc ||
+                 TypeOfToken == TokenTypes::dec) {
+        HandleincAnddec(SliceStuff(1, Line.size() - 1, Line),
+                        Token.LiteralToken);
         break;
       } else if (TypeOfToken == TokenTypes::rpt) {
         RPTStartLine.push(ByteCode.size());
