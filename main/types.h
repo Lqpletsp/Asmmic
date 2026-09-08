@@ -67,6 +67,10 @@ enum class TokenTypes {
   evl,
   // commands
   out,
+  add,
+  min,
+  mlt,
+  div,
   inp,
   ini,
   set,
@@ -100,9 +104,9 @@ struct VariableDT {
 inline std::string MAINCODE = R"(
   ini.mem 100; 
   ini.var ~i x; 
-  set 0 : x;
-  inc x; 
-  out x; 
+
+  add 1, 2 : x; 
+ 
 )";
 
 inline std::vector<ByteCodeDT> ByteCode;

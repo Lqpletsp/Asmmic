@@ -29,7 +29,9 @@ std::unordered_map<std::string, TokenTypes> MapStringAndCommand = {
     {"F", TokenTypes::FalseVal},    {"==", TokenTypes::Equal},
     {"=", TokenTypes::Equal},       {"elf", TokenTypes::elf},
     {"ele", TokenTypes::ele},       {".", TokenTypes::Period},
-    {"gto", TokenTypes::gto},       {"inc", TokenTypes::inc}};
+    {"gto", TokenTypes::gto},       {"inc", TokenTypes::inc},
+    {"add", TokenTypes::add},       {"min", TokenTypes::min},
+    {"div", TokenTypes::div},       {"mlt", TokenTypes::mlt}};
 
 bool CheckIfCommand(const TokenTypes &EnumTokenVal) {
   switch (EnumTokenVal) {
@@ -45,6 +47,10 @@ bool CheckIfCommand(const TokenTypes &EnumTokenVal) {
   case TokenTypes::elf:
   case TokenTypes::gto:
   case TokenTypes::ini:
+  case TokenTypes::mlt:
+  case TokenTypes::add:
+  case TokenTypes::min:
+  case TokenTypes::div:
   case TokenTypes::inc:
     return true;
   default:
@@ -431,6 +437,77 @@ int HandleShuntingYard(const TokenizedLineDT &Line, const std::string &cmd) {
 
   return InterruptedPtr + 2;
 }
+void HandleSingleOperatorCommands(const TokenizedLineDT &Line,
+                                  const std::string &cmd) {
+  TokenTypes command = DetermineType(cmd);
+  bool StreamLoadingComplete = false;
+  int LP = 0;
+  TokenizedLineDT SLine = SliceStuff(LP, Line.size() - 1, Line);
+  auto AddinitialBC = []() {
+    ByteCode.push_back({"", -1, -1, TokenTypes::set});
+    ByteCode.push_back({"", -1, -1, TokenTypes::MathExpr});
+  };
+  auto AddExprEndBC = []() {
+    ByteCode.push_back({"", -1, -1, TokenTypes::MathExprEnd});
+  };
+  auto AddOperator = [](TokenTypes Operator) {
+    ByteCode.push_back({"", -1, -1, Operator});
+  };
+  AddinitialBC();
+  while (LP < Line.size()) {
+    TokenDT token = Line.at(LP);
+    TokenTypes Ttype = DetermineType(token.LiteralToken);
+    if (!StreamLoadingComplete) {
+      if (LP == 2)
+        AddOperator(command);
+      else if (LP % 2 == 1 && LP != 1)
+        AddOperator(command);
+
+      int LiN = token.LineNum, CoN = token.ColNum;
+      switch (Ttype) {
+      case TokenTypes::Colon:
+        if (!ByteCode.empty()) {
+          if (ByteCode.back().TypeRepr != command)
+            AddOperator(command);
+        }
+        AddExprEndBC();
+        ByteCode.push_back({"", -1, -1, TokenTypes::Colon});
+        StreamLoadingComplete = true;
+        break;
+      case TokenTypes::DoubleVal:
+      case TokenTypes::IntVal:
+        ByteCode.push_back({token.LiteralToken, LiN, CoN, Ttype});
+        break;
+      case TokenTypes::Identifier:
+        LP += HandleVariables(SLine, token);
+        --LP;
+        break;
+      case TokenTypes::Stopper:
+        if (!ByteCode.empty()) {
+          if (ByteCode.back().TypeRepr != command)
+            AddOperator(command);
+        }
+        AddExprEndBC();
+        break;
+
+      default:
+        ShowError(token, ErrorTypes::GarbageToken);
+        break;
+      }
+    } else {
+      switch (Ttype) {
+      case TokenTypes::Identifier:
+        LP += HandleVariables(SLine, token);
+        --LP;
+        break;
+      default:
+        ShowError(token, ErrorTypes::GarbageToken);
+        break;
+      }
+    }
+    ++LP;
+  }
+}
 void HandleincAnddec(const TokenizedLineDT &Line, const std::string &cmd) {
   TokenTypes command = (cmd == "inc") ? TokenTypes::Add : TokenTypes::Min;
   int LP = 0;
@@ -447,7 +524,7 @@ void HandleincAnddec(const TokenizedLineDT &Line, const std::string &cmd) {
     case TokenTypes::DoubleVal:
       AddinitialBC();
       ByteCode.push_back({token.LiteralToken, LiN, CoN, Ttype});
-      ByteCode.push_back({"1", -1, -1, TokenTypes::IntVal});
+      ByteCode.push_back({"1", -1, -1, Ttype});
       ByteCode.push_back({"", -1, -1, command});
       ByteCode.push_back({"", -1, -1, TokenTypes::MathExprEnd});
       break;
@@ -670,6 +747,13 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
           LiteralString = Token.LiteralToken;
           TypeOfToken = type;
         }
+      } else if (TypeOfToken == TokenTypes::add ||
+                 TypeOfToken == TokenTypes::min ||
+                 TypeOfToken == TokenTypes::mlt ||
+                 TypeOfToken == TokenTypes::div) {
+        HandleSingleOperatorCommands(SliceStuff(1, Line.size() - 1, Line),
+                                     Token.LiteralToken);
+        break;
       } else if (TypeOfToken == TokenTypes::gto) {
         if (Line.size() < 2)
           ShowError(Line.at(0), ErrorTypes::NoArgumentsForgtoCommand);
