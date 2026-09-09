@@ -444,14 +444,14 @@ void HandleSingleOperatorCommands(const TokenizedLineDT &Line,
   int LP = 0;
   TokenizedLineDT SLine = SliceStuff(LP, Line.size() - 1, Line);
   auto AddinitialBC = []() {
-    ByteCode.push_back({"set", -1, -1, TokenTypes::set});
-    ByteCode.push_back({"MathExpr", -1, -1, TokenTypes::MathExpr});
+    ByteCode.push_back({"", -1, -1, TokenTypes::set});
+    ByteCode.push_back({"", -1, -1, TokenTypes::MathExpr});
   };
   auto AddExprEndBC = []() {
-    ByteCode.push_back({"MathExprEnd", -1, -1, TokenTypes::MathExprEnd});
+    ByteCode.push_back({"", -1, -1, TokenTypes::MathExprEnd});
   };
   auto AddOperator = [](TokenTypes Operator) {
-    ByteCode.push_back({"Operator", -1, -1, Operator});
+    ByteCode.push_back({"", -1, -1, Operator});
   };
   int ExprPointer = 0;
   AddinitialBC();
@@ -472,7 +472,7 @@ void HandleSingleOperatorCommands(const TokenizedLineDT &Line,
             AddOperator(command);
         }
         AddExprEndBC();
-        ByteCode.push_back({"Colon", -1, -1, TokenTypes::Colon});
+        ByteCode.push_back({"", -1, -1, TokenTypes::Colon});
         StreamLoadingComplete = true;
         break;
       case TokenTypes::DoubleVal:
@@ -846,6 +846,8 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
         } else
           LiteralString = Token.LiteralToken;
       }
+      if (CheckIfCommand(TypeOfToken))
+        LiteralString = ""; // to make sure unnecessary memory is not being used
       ByteCode.push_back(
           CreateByteCodeToken(LiteralString, LiN, CoN, TypeOfToken));
       LinePointer++;

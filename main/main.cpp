@@ -15,8 +15,6 @@ void PrintDetails() {
 
 int main() {
   HandleLexer();
-  DebugFunction();
-  return 0;
   ErrorInstance = "IT";
   std::cout << "________________________\n" << std::endl;
   InterpretByteCode();
