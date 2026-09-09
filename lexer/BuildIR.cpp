@@ -439,7 +439,19 @@ int HandleShuntingYard(const TokenizedLineDT &Line, const std::string &cmd) {
 }
 void HandleSingleOperatorCommands(const TokenizedLineDT &Line,
                                   const std::string &cmd) {
-  TokenTypes command = DetermineType(cmd);
+  auto CorrespondingOperator = [](TokenTypes command) {
+    switch (command) {
+    case TokenTypes::add:
+      return TokenTypes::Add;
+    case TokenTypes::min:
+      return TokenTypes::Min;
+    case TokenTypes::mlt:
+      return TokenTypes::Mlt;
+    default:
+      return TokenTypes::div;
+    }
+  };
+  TokenTypes command = CorrespondingOperator(DetermineType(cmd));
   bool StreamLoadingComplete = false;
   int LP = 0;
   TokenizedLineDT SLine = SliceStuff(LP, Line.size() - 1, Line);
