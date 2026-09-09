@@ -444,23 +444,24 @@ void HandleSingleOperatorCommands(const TokenizedLineDT &Line,
   int LP = 0;
   TokenizedLineDT SLine = SliceStuff(LP, Line.size() - 1, Line);
   auto AddinitialBC = []() {
-    ByteCode.push_back({"", -1, -1, TokenTypes::set});
-    ByteCode.push_back({"", -1, -1, TokenTypes::MathExpr});
+    ByteCode.push_back({"set", -1, -1, TokenTypes::set});
+    ByteCode.push_back({"MathExpr", -1, -1, TokenTypes::MathExpr});
   };
   auto AddExprEndBC = []() {
-    ByteCode.push_back({"", -1, -1, TokenTypes::MathExprEnd});
+    ByteCode.push_back({"MathExprEnd", -1, -1, TokenTypes::MathExprEnd});
   };
   auto AddOperator = [](TokenTypes Operator) {
-    ByteCode.push_back({"", -1, -1, Operator});
+    ByteCode.push_back({"Operator", -1, -1, Operator});
   };
+  int ExprPointer = 0;
   AddinitialBC();
   while (LP < Line.size()) {
     TokenDT token = Line.at(LP);
     TokenTypes Ttype = DetermineType(token.LiteralToken);
     if (!StreamLoadingComplete) {
-      if (LP == 2)
+      if (ExprPointer == 2)
         AddOperator(command);
-      else if (LP % 2 == 1 && LP != 1)
+      else if (ExprPointer % 2 == 1 && ExprPointer != 1)
         AddOperator(command);
 
       int LiN = token.LineNum, CoN = token.ColNum;
@@ -471,7 +472,7 @@ void HandleSingleOperatorCommands(const TokenizedLineDT &Line,
             AddOperator(command);
         }
         AddExprEndBC();
-        ByteCode.push_back({"", -1, -1, TokenTypes::Colon});
+        ByteCode.push_back({"Colon", -1, -1, TokenTypes::Colon});
         StreamLoadingComplete = true;
         break;
       case TokenTypes::DoubleVal:
@@ -487,6 +488,7 @@ void HandleSingleOperatorCommands(const TokenizedLineDT &Line,
           if (ByteCode.back().TypeRepr != command)
             AddOperator(command);
         }
+        ExprPointer = -1;
         AddExprEndBC();
         break;
 
@@ -506,6 +508,7 @@ void HandleSingleOperatorCommands(const TokenizedLineDT &Line,
       }
     }
     ++LP;
+    ++ExprPointer;
   }
 }
 void HandleincAnddec(const TokenizedLineDT &Line, const std::string &cmd) {
