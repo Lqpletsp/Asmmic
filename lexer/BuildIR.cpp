@@ -495,15 +495,6 @@ void HandleSingleOperatorCommands(const TokenizedLineDT &Line,
         LP += HandleVariables(SLine, token);
         --LP;
         break;
-      case TokenTypes::Stopper:
-        if (!ByteCode.empty()) {
-          if (ByteCode.back().TypeRepr != command)
-            AddOperator(command);
-        }
-        ExprPointer = -1;
-        AddExprEndBC();
-        break;
-
       default:
         ShowError(token, ErrorTypes::GarbageToken);
         break;
