@@ -43,7 +43,7 @@ enum class ErrorTypes {
   NoParameterIndication,
   NoArgumentsForgtoCommand,
   ModuleTriedEndingButWasNotStarted,
-
+  InvalidMathExpression,
 };
 
 inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
@@ -92,7 +92,7 @@ inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
      "Incomplete amount of arguments given. The line command was unable to "
      "interpret"},
     {ErrorTypes::NoArrayIndexGiven,
-     "Attemped to store data as a data structure"},
+     "Arrays require an int index but was not given"},
     {ErrorTypes::NonDigitDataForclc, "Attempted non digit data for clc"},
     {ErrorTypes::InvalidBooleanExpression,
      "Boolean expression given was invalid"},
@@ -124,6 +124,7 @@ inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
      "given"},
     {ErrorTypes::ModuleTriedEndingButWasNotStarted,
      ".mod argument for end command expects a started module but was not "
-     "started"}};
+     "started"},
+    {ErrorTypes::InvalidMathExpression, "Math expression given was invalid"}};
 void ShowError(const TokenDT &Token, const ErrorTypes &Type);
 void ShowError(const ByteCodeDT &Token, const ErrorTypes &Type);

@@ -148,7 +148,7 @@ std::pair<int, int> ResolveArrays() {
   }
   if (AddrStack.size() < 1 && VarStack.size() > 1) {
     ShowError(BCR,
-              ErrorTypes::CannotOutputDataStructures); // invalid error message
+              ErrorTypes::NoArrayIndexGiven); // invalid error message
   } else if (AddrStack.size() == 0 && VarStack.size() == 1)
     return {VarStack.top(), -1};
   while (VarStack.size() > 1 && AddrStack.size() == 1) {
@@ -579,6 +579,8 @@ double OperateMathExpr() {
       case TokenTypes::Mlt:
       case TokenTypes::Div:
       case TokenTypes::Min:
+        if (EvalStack.size() < 2)
+          ShowError(BCR, ErrorTypes::InvalidMathExpression);
         a = EvalStack.top();
         EvalStack.pop();
         b = EvalStack.top();

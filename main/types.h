@@ -103,9 +103,7 @@ struct VariableDT {
 // THIS IS THE MAIN CODE!!!
 inline std::string MAINCODE = R"(
   ini.mem 100; 
-  ini.var ~i x,y; 
-
-  add 1,2,3] 1,2: x,y; 
+  out.clc 1--1; 
  
 )";
 

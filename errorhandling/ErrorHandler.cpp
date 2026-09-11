@@ -4,6 +4,7 @@
 #include <iostream>
 
 namespace {
+void PrintErrorTag() {}
 std::vector<std::string> SplitLines() {
   bool InString = false, InComment = false;
   std::string Line;
@@ -103,7 +104,7 @@ void ShowError(const ByteCodeDT &Token, const ErrorTypes &Type) {
     // BadToken = ErrLine.at(ErrCol);
     std::cout << std::string(BadToken.size(), '^') << "\n\n";
   }
-  if (Token.LiteralToken == "" || Type == ErrorTypes::MemoryFull)
+  if (BadToken == "" || Type == ErrorTypes::MemoryFull)
     std::cout << "Err[" << ErrorInstance << "@(ln:" << ErrLineNum
               << "||BCP:" << BCP << ")]: ";
   else
