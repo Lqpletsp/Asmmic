@@ -1,5 +1,6 @@
 #pragma once
 #include <deque>
+#include <filesystem>
 #include <stack>
 #include <string>
 #include <unordered_map>
@@ -100,12 +101,11 @@ struct VariableDT {
   std::deque<int> MemorySlotsAssigned;
   bool Array;
 };
-// THIS IS THE MAIN CODE!!!
-inline std::string MAINCODE = R"(
-  ini.mem 100; 
-  out.clc 1--1; 
- 
-)";
+namespace fs = std::filesystem;
+const inline fs::path dir_path =
+    "/home/solitude/Projects/AssmicInterpreterLanguage/main/CodeTests.txt";
+
+inline std::string MAINCODE = R"()";
 
 inline std::vector<ByteCodeDT> ByteCode;
 

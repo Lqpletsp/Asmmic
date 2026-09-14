@@ -129,7 +129,8 @@ void DeclareVariable(const TokenizedLineDT &VarDecLine) {
           DataType = TokenTypes::IntVal;
           break;
         case 's':
-          DataType = TokenTypes::StringVal;
+          DataType = TokenTypes::CharVal;
+          Array = true;
           break;
         case 'd':
           DataType = TokenTypes::DoubleVal;

@@ -1,9 +1,11 @@
 #include "../IRinterpreter/VM.h"
 #include "../lexer/lexer.h"
 #include "types.h"
+#include <fstream>
 #include <iostream>
 
 void DebugFunction();
+int ExtractTextFromFile();
 
 void PrintDetails() {
 
@@ -14,6 +16,8 @@ void PrintDetails() {
 }
 
 int main() {
+  if (ExtractTextFromFile() > 0)
+    return 1;
   HandleLexer();
   ErrorInstance = "IT";
   std::cout << "________________________\n" << std::endl;
@@ -30,4 +34,18 @@ void DebugFunction() {
               << BC.LiteralToken << std::endl;
     ++idx;
   }
+}
+
+int ExtractTextFromFile() {
+  std::ifstream InFile(dir_path);
+  if (!InFile.is_open()) {
+    std::cout << "ERR[FE] : File extraction failed for path '" << dir_path
+              << "'" << std::endl;
+    return 1;
+  }
+  std::string line;
+  while (std::getline(InFile, line)) {
+    MAINCODE = MAINCODE + line + '\n';
+  }
+  return 0;
 }

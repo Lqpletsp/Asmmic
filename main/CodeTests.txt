@@ -1,2 +1,5 @@
-
-
+ini.mem 100; 
+ini.var ~s Name; 
+mlc 5 : Name; 
+set "Sajal" : Name; 
+out Name@3; 

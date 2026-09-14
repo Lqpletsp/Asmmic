@@ -1,7 +1,7 @@
 #include "../errorhandling/ErrorHandler.h"
 #include "../main/types.h"
 #include "ExecuteCommands.h"
-
+#include <iostream>
 void InterpretByteCode() {
   BCP = 0;
   TokenTypes EnumRepr;
@@ -29,6 +29,7 @@ void InterpretByteCode() {
       HandleModule();
       break;
     default:
+      std::cout << "HERE" << std::endl;
       ShowError(BCR, ErrorTypes::GarbageArgInACommand);
       break;
     }

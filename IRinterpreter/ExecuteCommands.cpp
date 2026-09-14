@@ -1,5 +1,6 @@
 #include "../errorhandling/ErrorHandler.h"
 #include "../main/ImportantInternalFunctions.h"
+#include <deque>
 #include <iostream>
 #include <utility>
 
@@ -137,7 +138,7 @@ std::pair<int, int> ResolveArrays() {
     }
     default:
       std::cout << "--INVALID--ResolveArrays()-TypeMismatch-"
-                   "PossibleErrorInLexer-NOTdisasmError\n";
+                   "PossibleErrorInLexer-NOTAsmmicError\n";
       break;
     }
 
@@ -167,7 +168,7 @@ TokenTypes GetVariableDataType(const std::string &VarID) {
   return GetVariableMetaData(std::stoi(VarID))->DataType;
 }
 
-std::string GetArrayData() {
+auto GetArrayData() {
   // strings in arrays are handled by inserting the initial memory address to
   // the vector
   // at the end of the string, add a null character
@@ -176,14 +177,19 @@ std::string GetArrayData() {
   // character
   auto [VarID, Addr] = ResolveArrays();
   VariableDT &Arr = *GetVariableMetaData(VarID);
+  if (Addr == -1)
+    return Arr.MemorySlotsAssigned;
   if (Addr < 0 || Addr >= Arr.MemorySlotsAssigned.size())
     ShowError(ByteCode.at(BCP), ErrorTypes::OutOfBounds);
   // strings require pointers
-  return SBMemory.at(Arr.MemorySlotsAssigned.at(Addr)).Data;
+  std::deque<int> TempD;
+  TempD.push_back(Arr.MemorySlotsAssigned.at(Addr));
+  return TempD;
 }
+
 void IncreaseMemorySpaces(const int &VariableID, const int &MemorySpaces) {
   VariableDT &Variable = *GetVariableMetaData(VariableID);
-  for (int _ = 0; _ < MemorySpaces; _++) {
+  for (int _ = 0; _ < MemorySpaces; ++_) {
     int MemorySpaceALlocated = AllocateSBmemory();
     Variable.MemorySlotsAssigned.push_back(MemorySpaceALlocated);
     SBMemory.at(MemorySpaceALlocated).VariableID = VariableID;
@@ -272,23 +278,38 @@ void ResolveWriteMode() {
       auto [VarID, ArrayIdx] = ResolveArrays();
       VariableDT &DestV = *GetVariableMetaData(VarID),
                  &SrcV = *GetVariableMetaData(0);
-      int SrcAddr = SrcV.MemorySlotsAssigned.front();
       if (SrcV.MemorySlotsAssigned.empty())
         ShowError(BCR, ErrorTypes::StreamVarEmpty);
-      if (ArrayIdx < 0)
-        ShowError(BCR, ErrorTypes::NoArrayIndexGiven);
+      int SrcAddr = SrcV.MemorySlotsAssigned.front();
+      if (ArrayIdx < 0) {
+        if (!(DestV.Array && DestV.DataType == TokenTypes::CharVal))
+          ShowError(BCR, ErrorTypes::NoArrayIndexGiven);
+      }
       if (DestV.MemorySlotsAssigned.empty())
         ShowError(BCR, ErrorTypes::OutOfBounds);
-
+      bool WholeDT = false;
+      if (ArrayIdx == -1) {
+        ArrayIdx = 0;
+        WholeDT = true;
+      }
       int DestAddr = DestV.MemorySlotsAssigned.at(ArrayIdx);
-
       ValidateType(SrcAddr, DestV.MemorySlotsAssigned.front());
       if (DestV.MemorySlotsAssigned.size() == 0)
-        DestV.MemorySlotsAssigned.push_back(AllocateSBmemory());
-      SBMemory.at(DestAddr).Data = SBMemory.at(SrcAddr).Data;
-      SBMemory.at(DestAddr).DataType = SBMemory.at(SrcAddr).DataType;
-
-      ReleaseMemoryFromStream(); // to remove the data
+        ShowError(BCR, ErrorTypes::OutOfBounds);
+      RawDataRepr RD = SBMemory.at(SrcAddr);
+      int idxCount = 0;
+      while (RD.DataType != TokenTypes::Unknown && RD.Data != "-") {
+        SBMemory.at(DestAddr).Data = RD.Data;
+        SBMemory.at(DestAddr).DataType = RD.DataType;
+        ReleaseMemoryFromStream(); // to remove the data
+        if (!WholeDT || idxCount >= DestV.MemorySlotsAssigned.size() - 1)
+          break;
+        ++idxCount;
+        DestAddr = DestV.MemorySlotsAssigned.at(idxCount);
+        if (SrcV.MemorySlotsAssigned.empty())
+          ShowError(BCR, ErrorTypes::StreamVarEmpty);
+        RD = SBMemory.at(SrcV.MemorySlotsAssigned.front());
+      }
       ReleaseMemoryFromStream(); // to remove the null char
       break;
     }
@@ -335,16 +356,25 @@ std::pair<std::string, TokenTypes> GetDataFromToken() {
     break;
   }
   case TokenTypes::ArrayHint: {
+    Data = "";
     VariableDT &Arr = *GetVariableMetaData(std::stoi(BCR.LiteralToken));
-    std::string PrintData = GetArrayData();
-    if (Arr.DataType == TokenTypes::BoolVal) {
-      if (PrintData == "T")
-        Data = "true";
-      else
-        Data = "false";
-    } else
-      Data = PrintData;
-    type = Arr.DataType;
+    std::deque<int> PD = GetArrayData();
+    if (PD.size() > 1) {
+      for (size_t i = 0; i < PD.size(); ++i) {
+        Data += SBMemory.at(PD.at(i)).Data;
+      }
+      type = TokenTypes::StringVal;
+    } else {
+      std::string PrintData = SBMemory.at(PD.front()).Data;
+      if (Arr.DataType == TokenTypes::BoolVal) {
+        if (PrintData == "T")
+          Data = "true";
+        else
+          Data = "false";
+      } else
+        Data = PrintData;
+      type = Arr.DataType;
+    }
     break;
   }
   case TokenTypes::MathExpr:
@@ -460,7 +490,10 @@ bool OperateBoolExpr() {
     }
 
     case TokenTypes::ArrayHint: {
-      std::string data = GetArrayData();
+      auto PD = GetArrayData();
+      if (PD.size() > 1)
+        ShowError(BCR, ErrorTypes::NoArrayIndexGiven);
+      std::string data = SBMemory.at(PD.front()).Data;
       TokenTypes dataType =
           GetVariableMetaData(std::stoi(BCR.LiteralToken))->DataType;
       EvalStack.push({data, dataType});
@@ -572,7 +605,10 @@ double OperateMathExpr() {
             GetVariableMetaData(std::stoi(BCR.LiteralToken))->DataType;
         if (DT != TokenTypes::IntVal && DT != TokenTypes::DoubleVal)
           ShowError(BCR, ErrorTypes::NonDigitDataForclc);
-        EvalStack.push(std::stod(GetArrayData()));
+        auto PD = GetArrayData();
+        if (PD.size() > 1)
+          ShowError(BCR, ErrorTypes::NoArrayIndexGiven);
+        EvalStack.push(std::stod(SBMemory.at(PD.front()).Data));
         break;
       }
       case TokenTypes::Add:
@@ -645,6 +681,17 @@ std::pair<std::string, TokenTypes> GetTopStreamData() {
   return {Data, DT};
 }
 
+std::string GetWholeStreamData() {
+  std::string Data = "";
+  while (true) {
+    auto [ch, DT] = GetTopStreamData();
+    if (ch == "-" && DT == TokenTypes::Unknown)
+      break;
+    Data += ch;
+  }
+  return Data;
+}
+
 } // namespace
 void outCommand() {
   // when called, increment BCP to access the first line argument
@@ -654,12 +701,7 @@ void outCommand() {
          BCR.TypeRepr != TokenTypes::ENDCODE) {
     auto [Data, DT] = GetDataFromToken();
     InsertWholeDataInSB(Data, DT);
-    while (true) {
-      auto [DT2, DTP] = GetTopStreamData();
-      if (DTP == TokenTypes::Unknown)
-        break;
-      std::cout << DT2;
-    }
+    std::cout << GetWholeStreamData();
     BCP++;
     if (!CheckIfAppBCP())
       return;
@@ -722,6 +764,7 @@ void HandleModule() {
 void mlcCommand() {
   ++BCP;
   ResolveReadMode(TokenTypes::set);
+  ++BCP;
   ByteCodeDT BCR = ByteCode.at(BCP);
   while (BCR.TypeRepr != TokenTypes::NewLine &&
          BCR.TypeRepr != TokenTypes::ENDCODE) {
@@ -741,10 +784,11 @@ void mlcCommand() {
 
       auto [VarID, Arridx] = ResolveArrays();
 
-      if (Arridx >= 0)
+      if (Arridx != -1)
         ShowError(BCR, ErrorTypes::CannotTransformStaticVaribles);
 
       auto [MemorySpaceAllocated, DT] = GetTopStreamData();
+      ReleaseMemoryFromStream(); // to remove null character;
       if (DT != TokenTypes::IntVal)
         ShowError(BCR, ErrorTypes::InvalidTypeForNumberOfAllocations);
       int Allocated = std::stoi(MemorySpaceAllocated);
