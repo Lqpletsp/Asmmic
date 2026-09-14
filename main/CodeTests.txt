@@ -1,5 +1,9 @@
 ini.mem 100; 
-ini.var ~s Name; 
-mlc 5 : Name; 
-set "Sajal" : Name; 
-out Name@3; 
+ini.var ~i Num;
+ini.mod MyMod : number; 
+end.mod; 
+
+
+set 10 : Num; 
+gto Num : MyMod; 
+

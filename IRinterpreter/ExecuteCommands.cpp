@@ -725,10 +725,7 @@ void Handlegotoln() {
     break;
   case (TokenTypes::Module): {
     InterpreterModuleStack.push(BCP);
-    // gotoln token contains the bytecode index to go
-    int ModID = std::stoi(ByteCode.at(BCP).LiteralToken);
-    ModuleDT Mod = GetModuleMetaData(ModID);
-    BCP = Mod.ByteCodeStart + 1;
+    BCP = std::stoi(ByteCode.at(BCP).LiteralToken);
     break;
   }
   default:

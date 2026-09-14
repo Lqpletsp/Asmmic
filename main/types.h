@@ -102,8 +102,7 @@ struct VariableDT {
   bool Array;
 };
 namespace fs = std::filesystem;
-const inline fs::path dir_path =
-    "/home/solitude/Projects/AssmicInterpreterLanguage/main/CodeTests.txt";
+const inline fs::path dir_path = "Path/to/file";
 
 inline std::string MAINCODE = R"()";
 

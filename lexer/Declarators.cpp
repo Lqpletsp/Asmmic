@@ -55,8 +55,8 @@ void DeclareModules(const TokenizedLineDT &ModDecLine) {
       .TypeRepr = TokenTypes::gotoln,
   });
   int BCi = ByteCode.size();
-  TrackModuleDecLine.push(BCi - 1);
 
+  TrackModuleDecLine.push(BCi - 1);
   ModuleDT ModuleInfo = {.ModuleID = ModID, .ByteCodeStart = BCi};
   AddNewLine();
   ByteCode.push_back({
