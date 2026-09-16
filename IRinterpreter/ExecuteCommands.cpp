@@ -347,7 +347,9 @@ std::pair<std::string, TokenTypes> GetDataFromToken() {
   case TokenTypes::VariableID: {
     VariableDT &srcVar = *GetVariableMetaData(std::stoi(BCR.LiteralToken));
     if (srcVar.MemorySlotsAssigned.empty() ||
-        SBMemory.at(srcVar.MemorySlotsAssigned.front()).Data == "")
+        (SBMemory.at(srcVar.MemorySlotsAssigned.front()).Data == "" &&
+         (srcVar.DataType != TokenTypes::StringVal &&
+          srcVar.DataType != TokenTypes::CharVal)))
       ShowError(BCR, ErrorTypes::EmptyDoubleOrIntVariable);
     int DataMAdr;
     Data = "";
