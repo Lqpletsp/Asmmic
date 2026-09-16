@@ -44,6 +44,7 @@ enum class ErrorTypes {
   NoArgumentsForgtoCommand,
   ModuleTriedEndingButWasNotStarted,
   InvalidMathExpression,
+  EmptyDoubleOrIntVariable,
 };
 
 inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
@@ -125,6 +126,9 @@ inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
     {ErrorTypes::ModuleTriedEndingButWasNotStarted,
      ".mod argument for end command expects a started module but was not "
      "started"},
-    {ErrorTypes::InvalidMathExpression, "Math expression given was invalid"}};
+    {ErrorTypes::InvalidMathExpression, "Math expression given was invalid"},
+    {ErrorTypes::EmptyDoubleOrIntVariable,
+     "Attempted to use int/double variable for operation but the variable was "
+     "empty"}};
 void ShowError(const TokenDT &Token, const ErrorTypes &Type);
 void ShowError(const ByteCodeDT &Token, const ErrorTypes &Type);

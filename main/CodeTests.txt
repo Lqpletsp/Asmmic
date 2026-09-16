@@ -1,9 +1,0 @@
-ini.mem 100; 
-ini.var ~i Num;
-ini.mod MyMod : number; 
-end.mod; 
-
-
-set 10 : Num; 
-gto Num : MyMod; 
-

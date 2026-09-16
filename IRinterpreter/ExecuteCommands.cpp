@@ -346,6 +346,9 @@ std::pair<std::string, TokenTypes> GetDataFromToken() {
   }
   case TokenTypes::VariableID: {
     VariableDT &srcVar = *GetVariableMetaData(std::stoi(BCR.LiteralToken));
+    if (srcVar.MemorySlotsAssigned.empty() ||
+        SBMemory.at(srcVar.MemorySlotsAssigned.front()).Data == "")
+      ShowError(BCR, ErrorTypes::EmptyDoubleOrIntVariable);
     int DataMAdr;
     Data = "";
     for (int idx = 0; idx < srcVar.MemorySlotsAssigned.size(); ++idx) {
@@ -593,8 +596,11 @@ double OperateMathExpr() {
         EvalStack.push(std::stod(BCR.LiteralToken));
         break;
       case TokenTypes::VariableID: {
-        TokenTypes DT =
-            GetVariableMetaData(std::stoi(BCR.LiteralToken))->DataType;
+        VariableDT V = *GetVariableMetaData(std::stoi(BCR.LiteralToken));
+        TokenTypes DT = V.DataType;
+        if (V.MemorySlotsAssigned.empty() ||
+            SBMemory.at(V.MemorySlotsAssigned.front()).Data == "")
+          ShowError(BCR, ErrorTypes::EmptyDoubleOrIntVariable);
         if (DT != TokenTypes::IntVal && DT != TokenTypes::DoubleVal)
           ShowError(BCR, ErrorTypes::NonDigitDataForclc);
         EvalStack.push(std::stod(GetDataFromToken().first));
