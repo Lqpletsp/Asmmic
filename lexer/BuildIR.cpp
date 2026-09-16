@@ -1,8 +1,6 @@
 #include "../errorhandling/ErrorHandler.h"
 #include "../main/ImportantInternalFunctions.h"
 #include "Declarators.h"
-#include <iostream>
-#include <sstream>
 
 namespace {
 

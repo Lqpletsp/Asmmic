@@ -1,8 +1,6 @@
 #include "../errorhandling/ErrorHandler.h"
 #include "../main/ImportantInternalFunctions.h"
-#include <deque>
 #include <iostream>
-#include <utility>
 
 namespace {
 double OperateMathExpr();

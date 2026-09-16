@@ -1,6 +1,5 @@
 #include "../errorhandling/ErrorHandler.h"
 #include "../main/ImportantInternalFunctions.h"
-#include "../main/types.h"
 
 namespace {
 bool AppendVariableDetails(const std::string &VName, const bool &Array,

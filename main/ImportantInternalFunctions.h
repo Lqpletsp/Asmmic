@@ -1,9 +1,6 @@
 #pragma once
 #include "types.h"
 #include <algorithm>
-#include <array>
-#include <iterator>
-#include <sstream>
 ModuleDT GetModuleMetaData(const int &VariableID);
 int GetAssignedModuleID(const std::string &ModuleName);
 int SMalloc();

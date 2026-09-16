@@ -1,5 +1,4 @@
 #include "../errorhandling/ErrorHandler.h"
-#include "../main/types.h"
 #include "ExecuteCommands.h"
 void InterpretByteCode() {
   BCP = 0;

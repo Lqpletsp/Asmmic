@@ -1,6 +1,5 @@
 #include "../IRinterpreter/VM.h"
 #include "../lexer/lexer.h"
-#include "types.h"
 #include <fstream>
 #include <iostream>
 

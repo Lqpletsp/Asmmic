@@ -1,6 +1,4 @@
 #include "ErrorHandler.h"
-#include "../main/types.h"
-#include <cstdlib>
 #include <iostream>
 
 namespace {
