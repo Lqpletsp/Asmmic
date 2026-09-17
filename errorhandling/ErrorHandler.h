@@ -128,7 +128,7 @@ inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
      "started"},
     {ErrorTypes::InvalidMathExpression, "Math expression given was invalid"},
     {ErrorTypes::EmptyDoubleOrIntVariable,
-     "Attempted to use int/double variable for operation but the variable was "
+     "Attempted to use the variable for operation but the variable was "
      "empty"}};
 void ShowError(const TokenDT &Token, const ErrorTypes &Type);
 void ShowError(const ByteCodeDT &Token, const ErrorTypes &Type);

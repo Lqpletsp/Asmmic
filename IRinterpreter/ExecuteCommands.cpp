@@ -49,17 +49,46 @@ std::pair<TokenTypes, std::string> GetWholeDataFromStream() {
 }
 void ValidateType(const int &MemoryAdr1, const int &MemoryAdr2) {
   RawDataRepr Var1 = SBMemory.at(MemoryAdr1), Var2 = SBMemory.at(MemoryAdr2);
-  if (!(Var1.DataType == Var2.DataType ||
-        (Var1.DataType == TokenTypes::DoubleVal &&
-         Var2.DataType == TokenTypes::IntVal) ||
-        (Var1.DataType == TokenTypes::IntVal &&
-         Var2.DataType == TokenTypes::DoubleVal)))
+
+  bool sameType = (Var1.DataType == Var2.DataType);
+
+  bool intDoubleMix = (Var1.DataType == TokenTypes::DoubleVal &&
+                       Var2.DataType == TokenTypes::IntVal) ||
+                      (Var1.DataType == TokenTypes::IntVal &&
+                       Var2.DataType == TokenTypes::DoubleVal);
+
+  bool var1IsLiteralBool = (Var1.DataType == TokenTypes::TrueVal ||
+                            Var1.DataType == TokenTypes::FalseVal);
+  bool var2IsLiteralBool = (Var2.DataType == TokenTypes::TrueVal ||
+                            Var2.DataType == TokenTypes::FalseVal);
+
+  bool boolMix = (var1IsLiteralBool && Var2.DataType == TokenTypes::BoolVal) ||
+                 (var2IsLiteralBool && Var1.DataType == TokenTypes::BoolVal);
+
+  if (!(sameType || intDoubleMix || boolMix)) {
     ShowError(ByteCode.at(BCP), ErrorTypes::InvalidDataTypeInVariable);
+  }
 }
 void ValidateType(const TokenTypes &T1, const TokenTypes &T2) {
-  if (!(T1 == T2 || (T1 == TokenTypes::DoubleVal && T2 == TokenTypes::IntVal) ||
-        (T1 == TokenTypes::IntVal && T2 == TokenTypes::DoubleVal)))
+  auto isBoolLiteral = [](TokenTypes type) {
+    return type == TokenTypes::TrueVal || type == TokenTypes::FalseVal;
+  };
+
+  bool areSame = (T1 == T2);
+
+  bool isIntDoubleMix =
+      (T1 == TokenTypes::IntVal && T2 == TokenTypes::DoubleVal) ||
+      (T1 == TokenTypes::DoubleVal && T2 == TokenTypes::IntVal);
+
+  bool isBoolMix = (isBoolLiteral(T1) && T2 == TokenTypes::BoolVal) ||
+                   (isBoolLiteral(T2) && T1 == TokenTypes::BoolVal) ||
+                   (isBoolLiteral(T1) && isBoolLiteral(T2));
+
+  bool isValid = areSame || isIntDoubleMix || isBoolMix;
+
+  if (!isValid) {
     ShowError(ByteCode.at(BCP), ErrorTypes::InvalidDataTypeInVariable);
+  }
 }
 
 template <typename T> // only char or string as DataToStore
@@ -335,7 +364,8 @@ std::pair<std::string, TokenTypes> GetDataFromToken() {
   case TokenTypes::CharVal:
   case TokenTypes::IntVal:
   case TokenTypes::DoubleVal:
-  case TokenTypes::BoolVal:
+  case TokenTypes::TrueVal:
+  case TokenTypes::FalseVal:
     break;
   case TokenTypes::BoolExpr: {
     Data = (OperateBoolExpr()) ? "T" : "F";
