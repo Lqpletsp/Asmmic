@@ -115,10 +115,12 @@ void InsertWholeDataInSB(const std::string &Data, const TokenTypes &DT) {
   case (TokenTypes::CharVal):
   case (TokenTypes::FalseVal):
   case (TokenTypes::DoubleVal):
+  case (TokenTypes::BoolVal):
     InsertDataInSB(Data, DT);
     break;
   default:
-    std::cout << "FAILED:InsertWholeDataInSB;TTYPE:" << static_cast<int>(DT);
+    std::cout << "FAILED:InsertWholeDataInSB;TTYPE:" << static_cast<int>(DT)
+              << std::endl;
 
     break;
   }
@@ -494,11 +496,9 @@ bool OperateBoolExpr() {
   if (!CheckIfAppBCP())
     return false;
 
-  // FETCH INSIDE THE LOOP OR CONDITION
   while (BCP < ByteCode.size() &&
          ByteCode.at(BCP).TypeRepr != TokenTypes::BoolExprEnd) {
-    ByteCodeDT BCR =
-        ByteCode.at(BCP); // <--- Fetch current bytecode instruction here!
+    ByteCodeDT BCR = ByteCode.at(BCP);
 
     switch (BCR.TypeRepr) {
     case TokenTypes::IntVal:
@@ -597,7 +597,7 @@ bool OperateBoolExpr() {
     }
 
     default:
-      break;
+      ShowError(BCR, ErrorTypes::InvalidBooleanExpression);
     }
 
     ++BCP;
@@ -605,9 +605,17 @@ bool OperateBoolExpr() {
 
   if (EvalStack.empty()) {
     return false;
-  }
+  } else {
 
-  return (EvalStack.top().Data == "T");
+    if (EvalStack.top().DataType == TokenTypes::StringVal ||
+        EvalStack.top().DataType == TokenTypes::CharVal)
+      return (EvalStack.top().Data == "") ? false : true;
+    else if (EvalStack.top().DataType == TokenTypes::DoubleVal ||
+             EvalStack.top().DataType == TokenTypes::IntVal)
+      return (std::stod(EvalStack.top().Data) == 0) ? false : true;
+    else
+      return (EvalStack.top().Data == "T");
+  };
 }
 
 double OperateMathExpr() {
