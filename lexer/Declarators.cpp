@@ -16,23 +16,35 @@ bool AppendVariableDetails(const std::string &VName, const bool &Array,
 }
 } // namespace
 void DeclareMemory(const TokenizedLineDT &MemDecLine) {
-  if (MemDecLine.size() != 1) {
+  if (MemDecLine.size() != 3) {
     if (MemDecLine.empty()) {
       return;
     }
-    ShowError(MemDecLine.at(0), ErrorTypes::GarbageArgInACommand);
+    ShowError(MemDecLine.at(MemDecLine.size() - 1),
+              ErrorTypes::GarbageArgInACommand);
   }
-  TotalMemSize = std::stoi(MemDecLine.at(0).LiteralToken);
+  std::string MemoryType = MemDecLine.at(0).LiteralToken;
+  if (MemDecLine.at(1).LiteralToken != "*")
+    ShowError(MemDecLine.at(1), ErrorTypes::GarbageArgInACommand);
+  try {
+    TotalMemSize = std::stoi(MemDecLine.at(2).LiteralToken);
+  } catch (...) {
+    ShowError(MemDecLine.at(2), ErrorTypes::GarbageArgInACommand);
+  }
   if (TotalMemSize <= 0)
-    ShowError(MemDecLine.at(0), ErrorTypes::ZeroOrNegativeMemorySapces);
-  for (int i = TotalMemSize - 1; i > -1; --i) {
-    g_TotalMemPool.push(i);
-    RawDataRepr EmptyRawData;
-    SBMemory.push_back(EmptyRawData);
-  }
-  VariableDT tempVar;
-  int VariableIDTemp = GetVariableID();
-  g_VariableTable[VariableIDTemp] = tempVar;
+    ShowError(MemDecLine.at(2), ErrorTypes::ZeroOrNegativeMemorySapces);
+
+  if (MemoryType == "vlm") {
+    for (int i = TotalMemSize - 1; i > -1; --i) {
+      g_TotalMemPool.push(i);
+      RawDataRepr EmptyRawData;
+      SBMemory.push_back(EmptyRawData);
+    }
+    VariableDT tempVar;
+    int VariableIDTemp = GetVariableID();
+    g_VariableTable[VariableIDTemp] = tempVar;
+  } else
+    ShowError(MemDecLine.at(2), ErrorTypes::GarbageArgInACommand);
 }
 void DeclareModules(const TokenizedLineDT &ModDecLine) {
   auto AddNewLine = [&]() {

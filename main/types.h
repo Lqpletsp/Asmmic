@@ -101,7 +101,7 @@ struct VariableDT {
   bool Array;
 };
 namespace fs = std::filesystem;
-const inline fs::path dir_path = "/home/solitude/CodeTests.dsm";
+const inline fs::path dir_path = "path to dir";
 inline std::string MAINCODE = R"()";
 
 inline std::vector<ByteCodeDT> ByteCode;

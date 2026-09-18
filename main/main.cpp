@@ -1,5 +1,6 @@
 #include "../IRinterpreter/VM.h"
 #include "../lexer/lexer.h"
+#include <chrono> // Added for timing
 #include <fstream>
 #include <iostream>
 
@@ -7,7 +8,6 @@ void DebugFunction();
 int ExtractTextFromFile();
 
 void PrintDetails() {
-
   std::cout << "Memory declared: " << TotalMemSize << " spaces" << std::endl;
   std::cout << "Memory remaining: " << g_TotalMemPool.size() << " spaces"
             << std::endl;
@@ -20,8 +20,22 @@ int main() {
   HandleLexer();
   ErrorInstance = "IT";
   std::cout << "________________________\n" << std::endl;
+
+  // --- Start Timer ---
+  auto start = std::chrono::high_resolution_clock::now();
+
   InterpretByteCode();
+
+  // --- End Timer ---
+  auto end = std::chrono::high_resolution_clock::now();
+
   std::cout << "\n________________________\n" << std::endl;
+
+  // Calculate duration in milliseconds
+  std::chrono::duration<double, std::milli> duration = end - start;
+  std::cout << "InterpretByteCode execution time: " << duration.count()
+            << " ms\n";
+
   PrintDetails();
   return 0;
 }
