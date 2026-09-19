@@ -1,6 +1,7 @@
 #include "../errorhandling/ErrorHandler.h"
 #include "../main/ImportantInternalFunctions.h"
 #include <iostream>
+#include <string>
 
 namespace {
 double OperateMathExpr();
@@ -380,6 +381,7 @@ std::pair<std::string, TokenTypes> GetDataFromToken() {
     type = (BCR.TypeRepr == TokenTypes::tos)   ? TokenTypes::StringVal
            : (BCR.TypeRepr == TokenTypes::tod) ? TokenTypes::DoubleVal
                                                : TokenTypes::IntVal;
+    int FallBackBCP = BCP;
     ++BCP;
     auto result = GetDataFromToken();
     Data = result.first;
@@ -387,10 +389,22 @@ std::pair<std::string, TokenTypes> GetDataFromToken() {
     switch (Type) {
       // since the data is stripped, the function will return the value as
       // identifier or boolval
+    case TokenTypes::StringVal:
+    case TokenTypes::CharVal:
     case TokenTypes::BoolVal:
     case TokenTypes::Identifier:
       if (type == TokenTypes::DoubleVal || type == TokenTypes::IntVal)
-        ShowError(BCR, ErrorTypes::InvalidTypeConversion);
+        ShowError(ByteCode.at(FallBackBCP), ErrorTypes::InvalidTypeConversion);
+      break;
+    default:
+      break;
+    }
+    switch (type) {
+    case (TokenTypes::DoubleVal):
+      Data = std::to_string(std::stod(Data));
+      break;
+    case (TokenTypes::IntVal):
+      Data = std::to_string(std::stoi(Data));
       break;
     default:
       break;
