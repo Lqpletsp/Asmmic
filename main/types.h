@@ -65,6 +65,9 @@ enum class TokenTypes {
   mem,
   clc,
   evl,
+  tos, // to string
+  toi, // to integer
+  tod, // to double
   // commands
   out,
   add,
@@ -87,6 +90,7 @@ enum class TokenTypes {
   Stopper, // "]"
   Parenthesis,
   Period,
+  Of, // "$"
 };
 
 struct ByteCodeDT {
@@ -101,7 +105,7 @@ struct VariableDT {
   bool Array;
 };
 namespace fs = std::filesystem;
-const inline fs::path dir_path = "path to dir";
+const inline fs::path dir_path = "/home/solitude/CodeTests.dsm";
 inline std::string MAINCODE = R"()";
 
 inline std::vector<ByteCodeDT> ByteCode;

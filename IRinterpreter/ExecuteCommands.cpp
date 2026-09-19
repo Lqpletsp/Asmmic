@@ -374,6 +374,29 @@ std::pair<std::string, TokenTypes> GetDataFromToken() {
     type = (Data == "T") ? TokenTypes::TrueVal : TokenTypes::FalseVal;
     break;
   }
+  case TokenTypes::tos:
+  case TokenTypes::tod:
+  case TokenTypes::toi: {
+    type = (BCR.TypeRepr == TokenTypes::tos)   ? TokenTypes::StringVal
+           : (BCR.TypeRepr == TokenTypes::tod) ? TokenTypes::DoubleVal
+                                               : TokenTypes::IntVal;
+    ++BCP;
+    auto result = GetDataFromToken();
+    Data = result.first;
+    TokenTypes Type = DetermineDataType(Data);
+    switch (Type) {
+      // since the data is stripped, the function will return the value as
+      // identifier or boolval
+    case TokenTypes::BoolVal:
+    case TokenTypes::Identifier:
+      if (type == TokenTypes::DoubleVal || type == TokenTypes::IntVal)
+        ShowError(BCR, ErrorTypes::InvalidTypeConversion);
+      break;
+    default:
+      break;
+    }
+    break;
+  }
   case TokenTypes::VariableID: {
     VariableDT &srcVar = *GetVariableMetaData(std::stoi(BCR.LiteralToken));
     if (srcVar.MemorySlotsAssigned.empty() ||
@@ -423,7 +446,6 @@ std::pair<std::string, TokenTypes> GetDataFromToken() {
     ShowError(BCR, ErrorTypes::GarbageArgInACommand);
     break;
   }
-
   return {Data, type};
 }
 bool OperateBoolExpr() {
@@ -848,5 +870,12 @@ void mlcCommand() {
     if (!CheckIfAppBCP())
       return;
     BCR = ByteCode.at(BCP);
+  }
+}
+void inpCommand() {
+  ++BCP;
+  ByteCodeDT BCR = ByteCode.at(BCP);
+  TokenTypes type = BCR.TypeRepr;
+  while (type != TokenTypes::ENDCODE && type != TokenTypes::NewLine) {
   }
 }

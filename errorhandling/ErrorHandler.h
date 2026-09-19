@@ -45,6 +45,8 @@ enum class ErrorTypes {
   ModuleTriedEndingButWasNotStarted,
   InvalidMathExpression,
   EmptyDoubleOrIntVariable,
+  NoOfOperator,
+  InvalidTypeConversion,
 };
 
 inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
@@ -129,6 +131,10 @@ inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
     {ErrorTypes::InvalidMathExpression, "Math expression given was invalid"},
     {ErrorTypes::EmptyDoubleOrIntVariable,
      "Attempted to use the variable for operation but the variable was "
-     "empty"}};
+     "empty"},
+    {ErrorTypes::NoOfOperator,
+     "Single argument commands require an of ($) operator but was not given"},
+    {ErrorTypes::InvalidTypeConversion,
+     "Cannot convert from string/char/boolean to int/double"}};
 void ShowError(const TokenDT &Token, const ErrorTypes &Type);
 void ShowError(const ByteCodeDT &Token, const ErrorTypes &Type);

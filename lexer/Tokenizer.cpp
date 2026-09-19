@@ -107,7 +107,7 @@ TokenizedCodeDT TokenizeCode(const std::string &MAINCODE) {
       }
     } else if (ch == ' ' || ch == '\t' || ch == '*' || ch == '@' || ch == ':' ||
                ch == '+' || ch == '-' || ch == '/' || ch == ']' || ch == ',' ||
-               ch == '&' || ch == '(' || ch == ')' || ch == '>' || ch == '<' ||
+               ch == '$' || ch == '(' || ch == ')' || ch == '>' || ch == '<' ||
                ch == '=') {
 
       // 1. Flush pending token (e.g., numbers, keywords, or .clc)

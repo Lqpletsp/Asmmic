@@ -29,7 +29,9 @@ std::unordered_map<std::string, TokenTypes> MapStringAndCommand = {
     {"ele", TokenTypes::ele},       {".", TokenTypes::Period},
     {"gto", TokenTypes::gto},       {"inc", TokenTypes::inc},
     {"add", TokenTypes::add},       {"min", TokenTypes::min},
-    {"div", TokenTypes::div},       {"mlt", TokenTypes::mlt}};
+    {"div", TokenTypes::div},       {"mlt", TokenTypes::mlt},
+    {"toi", TokenTypes::toi},       {"tod", TokenTypes::tod},
+    {"tos", TokenTypes::tos},       {"$", TokenTypes::Of}};
 
 bool CheckIfCommand(const TokenTypes &EnumTokenVal) {
   switch (EnumTokenVal) {
@@ -63,6 +65,9 @@ bool CheckIfMidLineCommand(const TokenTypes &EnumTokenVal) {
   case TokenTypes::Not:
   case TokenTypes::And:
   case TokenTypes::Or:
+  case TokenTypes::tod:
+  case TokenTypes::tos:
+  case TokenTypes::toi:
     return true;
   default:
     return false;
@@ -633,6 +638,7 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
   std::vector<int> CMPBlockCodeFinish;
   std::stack<std::stack<int>> CMPStartLineBack;
   std::stack<std::vector<int>> CMPBlockCodeFinishBack;
+  bool OneArgMLC = false;
 
   for (const auto &Line : TokenizedCode) {
     if (Line.empty())
@@ -653,7 +659,16 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
       int LiN = Token.LineNum, CoN = Token.ColNum;
       if (TypeOfToken == TokenTypes::Unknown)
         ShowError(Token, ErrorTypes::GarbageToken);
-      else if (TypeOfToken == TokenTypes::Identifier) {
+      else if (TypeOfToken == TokenTypes::Of) {
+        if (OneArgMLC) {
+          OneArgMLC = false;
+          ++LinePointer;
+          continue;
+        } else
+          ShowError(Token, ErrorTypes::GarbageToken);
+      } else if (OneArgMLC) {
+        ShowError(Token, ErrorTypes::NoOfOperator);
+      } else if (TypeOfToken == TokenTypes::Identifier) {
         TokenizedLineDT SlicedLine =
             SliceStuff(LinePointer, Line.size() - 1, Line);
         int iteration = HandleVariables(SlicedLine, Token);
@@ -775,6 +790,11 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
             TokenTypes::gotoln)); // will be replaced when "end .rpt" line
         LinePointer++;
         continue;
+      } else if (TypeOfToken == TokenTypes::toi ||
+                 TypeOfToken == TokenTypes::tod ||
+                 TypeOfToken == TokenTypes::tos) {
+        OneArgMLC = true;
+
       } else if (TypeOfToken == TokenTypes::end) {
         LinePointer++;
         if (LinePointer >= Line.size())
