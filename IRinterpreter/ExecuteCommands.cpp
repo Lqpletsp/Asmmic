@@ -404,7 +404,7 @@ std::pair<std::string, TokenTypes> GetDataFromToken() {
       Data = std::to_string(std::stod(Data));
       break;
     case (TokenTypes::IntVal):
-      Data = std::to_string(std::stoi(Data));
+      Data = std::to_string(std::stoi(std::to_string(std::stod(Data))));
       break;
     default:
       break;
