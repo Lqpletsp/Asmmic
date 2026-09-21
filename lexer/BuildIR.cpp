@@ -1,8 +1,8 @@
 #include "../errorhandling/ErrorHandler.h"
 #include "../main/ImportantInternalFunctions.h"
 #include "Declarators.h"
+#include <iostream>
 #include <string>
-
 namespace {
 
 bool IsMathOperator(TokenTypes &type) {
@@ -32,7 +32,8 @@ std::unordered_map<std::string, TokenTypes> MapStringAndCommand = {
     {"add", TokenTypes::add},       {"min", TokenTypes::min},
     {"div", TokenTypes::div},       {"mlt", TokenTypes::mlt},
     {"toi", TokenTypes::toi},       {"tod", TokenTypes::tod},
-    {"tos", TokenTypes::tos},       {"$", TokenTypes::Of}};
+    {"tos", TokenTypes::tos},       {"$", TokenTypes::Of},
+    {"inp", TokenTypes::inp}};
 
 bool CheckIfCommand(const TokenTypes &EnumTokenVal) {
   switch (EnumTokenVal) {
@@ -455,21 +456,22 @@ void HandleInputCommand(const TokenizedLineDT &Line, const TokenDT &cmd) {
     ByteCode.push_back({LT, LiN, CoN, TType});
   };
   std::string RName = RegisterName + std::to_string(RegisterID);
-  AppendVariableDetails(RName, true, TokenTypes::StringVal);
-  int RID = MapModuleNameAndID[RName];
+  AppendVariableDetails(RName, true, TokenTypes::CharVal);
+  int RID = (*c_MapVariableNameAndID)[RName];
   std::string SRID = std::to_string(RID);
   AddNativeBC("", TokenTypes::set);
   AddNativeBC("", TokenTypes::Colon);
   AddNativeBC(SRID, TokenTypes::VariableID);
   AddNativeBC("", TokenTypes::NewLine);
   AddNativeBC("", TokenTypes::set);
-  int VarID = GetAssignedModuleID(Line.at(1).LiteralToken);
-  TokenTypes VarDT = GetVariableMetaData(VarID)->DataType;
+  int VarID = GetAssignedVariableID(Line.at(1).LiteralToken);
+  VariableDT *VarMD = GetVariableMetaData(VarID);
+  TokenTypes VarDT = VarMD->DataType;
   switch (VarDT) {
   case (TokenTypes::BoolVal):
-    AddNativeBC("", TokenTypes::MathExpr);
+    AddNativeBC("", TokenTypes::BoolExpr);
     AddNativeBC(SRID, TokenTypes::VariableID);
-    AddNativeBC("", TokenTypes::MathExprEnd);
+    AddNativeBC("", TokenTypes::BoolExprEnd);
     break;
   case (TokenTypes::DoubleVal):
     AddNativeBC("", TokenTypes::tod);
@@ -485,7 +487,11 @@ void HandleInputCommand(const TokenizedLineDT &Line, const TokenDT &cmd) {
     break;
   }
   AddNativeBC("", TokenTypes::Colon);
-  AddNativeBC(std::to_string(VarID), TokenTypes::VariableID);
+  if (VarDT == TokenTypes::CharVal && VarMD->Array) {
+    AddNativeBC(std::to_string(VarID), TokenTypes::ArrayHint);
+    AddNativeBC("", TokenTypes::ArrEnd);
+  } else
+    AddNativeBC(std::to_string(VarID), TokenTypes::VariableID);
 }
 void HandleSingleOperatorCommands(const TokenizedLineDT &Line,
                                   const std::string &cmd) {

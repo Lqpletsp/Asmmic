@@ -1,6 +1,5 @@
 #include "../errorhandling/ErrorHandler.h"
 #include "../main/ImportantInternalFunctions.h"
-
 bool AppendVariableDetails(const std::string &VName, const bool &Array,
                            const TokenTypes &DT) {
   if (DT == TokenTypes::StringVal && Array)
@@ -39,8 +38,10 @@ void DeclareMemory(const TokenizedLineDT &MemDecLine) {
       SBMemory.push_back(EmptyRawData);
     }
     VariableDT tempVar;
-    int VariableIDTemp = GetVariableID();
+    int VariableIDTemp = 0;
+    ++CurrentVariableID;
     g_VariableTable[VariableIDTemp] = tempVar;
+    MapModuleNameAndID["!temp!"] = 0;
   } else
     ShowError(MemDecLine.at(2), ErrorTypes::GarbageArgInACommand);
 }

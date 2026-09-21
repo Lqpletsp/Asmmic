@@ -892,6 +892,5 @@ void inpCommand() {
   // the stream. A standalone command.
   std::string PseudoStore;
   std::getline(std::cin, PseudoStore);
-  InsertWholeDataInSB(PseudoStore, TokenTypes::StringVal);
-  ++BCP;
+  InsertWholeDataInSB(PseudoStore, TokenTypes::CharVal);
 }
