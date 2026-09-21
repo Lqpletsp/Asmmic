@@ -146,3 +146,6 @@ inline std::unordered_map<int, std::unordered_map<int, VariableDT>>
 inline std::stack<int> InterpreterModuleStack;
 inline std::stack<int> TrackModuleDecLine;
 inline int CurrentVariableID = 0;
+inline int RegisterID = 0;
+inline std::string RegisterName = "RG";
+// register name is stored as "RG<RegisterID>"

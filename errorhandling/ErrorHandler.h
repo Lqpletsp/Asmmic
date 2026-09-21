@@ -47,6 +47,7 @@ enum class ErrorTypes {
   EmptyDoubleOrIntVariable,
   NoOfOperator,
   InvalidTypeConversion,
+  InvalidCommandFormat,
 };
 
 inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
@@ -135,6 +136,8 @@ inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
     {ErrorTypes::NoOfOperator,
      "Single argument commands require an of ($) operator but was not given"},
     {ErrorTypes::InvalidTypeConversion,
-     "Cannot convert from string/char/boolean to int/double"}};
+     "Cannot convert from string/char/boolean to int/double"},
+    {ErrorTypes::InvalidCommandFormat,
+     "The line command does not support the intended arguments"}};
 void ShowError(const TokenDT &Token, const ErrorTypes &Type);
 void ShowError(const ByteCodeDT &Token, const ErrorTypes &Type);

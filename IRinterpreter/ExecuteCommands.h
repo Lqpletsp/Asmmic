@@ -4,3 +4,4 @@ void setCommand();
 void mlcCommand();
 void Handlegotoln();
 void HandleModule();
+void inpCommand();

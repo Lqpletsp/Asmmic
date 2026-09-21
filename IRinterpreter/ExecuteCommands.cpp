@@ -888,8 +888,10 @@ void mlcCommand() {
 }
 void inpCommand() {
   ++BCP;
-  ByteCodeDT BCR = ByteCode.at(BCP);
-  TokenTypes type = BCR.TypeRepr;
-  while (type != TokenTypes::ENDCODE && type != TokenTypes::NewLine) {
-  }
+  // job of the inp command is to just take one input and then store it inside
+  // the stream. A standalone command.
+  std::string PseudoStore;
+  std::getline(std::cin, PseudoStore);
+  InsertWholeDataInSB(PseudoStore, TokenTypes::StringVal);
+  ++BCP;
 }

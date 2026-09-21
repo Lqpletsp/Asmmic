@@ -26,6 +26,9 @@ void InterpretByteCode() {
     case TokenTypes::Module:
       HandleModule();
       break;
+    case TokenTypes::inp:
+      inpCommand();
+      break;
     default:
       ShowError(BCR, ErrorTypes::GarbageArgInACommand);
       break;

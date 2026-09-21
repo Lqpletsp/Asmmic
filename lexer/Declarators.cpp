@@ -1,7 +1,6 @@
 #include "../errorhandling/ErrorHandler.h"
 #include "../main/ImportantInternalFunctions.h"
 
-namespace {
 bool AppendVariableDetails(const std::string &VName, const bool &Array,
                            const TokenTypes &DT) {
   if (DT == TokenTypes::StringVal && Array)
@@ -11,10 +10,9 @@ bool AppendVariableDetails(const std::string &VName, const bool &Array,
   int VariableID = GetVariableID();
   (*c_VariableTable)[VariableID] = Variable;
   (*c_MapVariableNameAndID)[VName] = VariableID;
-  VarCount++;
+  ++VarCount;
   return true;
 }
-} // namespace
 void DeclareMemory(const TokenizedLineDT &MemDecLine) {
   if (MemDecLine.size() != 3) {
     if (MemDecLine.empty()) {
