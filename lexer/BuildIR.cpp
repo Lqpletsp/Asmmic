@@ -461,7 +461,8 @@ void HandleInputCommand(const TokenizedLineDT &Line, const TokenDT &cmd) {
   std::string SRID = std::to_string(RID);
   AddNativeBC("", TokenTypes::set);
   AddNativeBC("", TokenTypes::Colon);
-  AddNativeBC(SRID, TokenTypes::VariableID);
+  AddNativeBC(SRID, TokenTypes::ArrayHint);
+  AddNativeBC("", TokenTypes::ArrEnd);
   AddNativeBC("", TokenTypes::NewLine);
   AddNativeBC("", TokenTypes::set);
   int VarID = GetAssignedVariableID(Line.at(1).LiteralToken);

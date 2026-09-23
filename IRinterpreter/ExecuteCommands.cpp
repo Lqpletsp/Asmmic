@@ -308,37 +308,54 @@ void ResolveWriteMode() {
       auto [VarID, ArrayIdx] = ResolveArrays();
       VariableDT &DestV = *GetVariableMetaData(VarID),
                  &SrcV = *GetVariableMetaData(0);
+      bool StringVar = DestV.Array && DestV.DataType == TokenTypes::CharVal;
       if (SrcV.MemorySlotsAssigned.empty())
         ShowError(BCR, ErrorTypes::StreamVarEmpty);
       int SrcAddr = SrcV.MemorySlotsAssigned.front();
       if (ArrayIdx < 0) {
-        if (!(DestV.Array && DestV.DataType == TokenTypes::CharVal))
+        if (!StringVar)
           ShowError(BCR, ErrorTypes::NoArrayIndexGiven);
       }
-      if (DestV.MemorySlotsAssigned.empty())
+      if ((DestV.MemorySlotsAssigned.empty() && !StringVar) ||
+          (ArrayIdx >= static_cast<int>(DestV.MemorySlotsAssigned.size()))) {
         ShowError(BCR, ErrorTypes::OutOfBounds);
+      }
       bool WholeDT = false;
       if (ArrayIdx == -1) {
         ArrayIdx = 0;
         WholeDT = true;
       }
-      int DestAddr = DestV.MemorySlotsAssigned.at(ArrayIdx);
+      int DestAddr;
+      if (!StringVar)
+        DestAddr = DestV.MemorySlotsAssigned.at(ArrayIdx);
+      else {
+        if (!DestV.MemorySlotsAssigned.empty())
+          DestAddr = DestV.MemorySlotsAssigned.at(ArrayIdx);
+        else {
+          DestAddr = AllocateSBmemory();
+          SBMemory.at(DestAddr).DataType = TokenTypes::CharVal;
+          SBMemory.at(DestAddr).VariableID = VarID;
+          DestV.MemorySlotsAssigned.push_back(DestAddr);
+        }
+      }
       ValidateType(SrcAddr, DestV.MemorySlotsAssigned.front());
-      if (DestV.MemorySlotsAssigned.size() == 0)
-        ShowError(BCR, ErrorTypes::OutOfBounds);
       RawDataRepr RD = SBMemory.at(SrcAddr);
       int idxCount = 0;
       while (RD.DataType != TokenTypes::Unknown && RD.Data != "-") {
         SBMemory.at(DestAddr).Data = RD.Data;
         SBMemory.at(DestAddr).DataType = RD.DataType;
         ReleaseMemoryFromStream(); // to remove the data
-        if (!WholeDT || idxCount >= DestV.MemorySlotsAssigned.size() - 1)
+        RD = SBMemory.at(SrcV.MemorySlotsAssigned.front());
+        if (!WholeDT ||
+            (idxCount >= DestV.MemorySlotsAssigned.size() - 1 && !StringVar) ||
+            RD.DataType == TokenTypes::Unknown)
           break;
+        else if (StringVar && idxCount >= DestV.MemorySlotsAssigned.size() - 1)
+          DestV.MemorySlotsAssigned.push_back(AllocateSBmemory());
         ++idxCount;
         DestAddr = DestV.MemorySlotsAssigned.at(idxCount);
         if (SrcV.MemorySlotsAssigned.empty())
           ShowError(BCR, ErrorTypes::StreamVarEmpty);
-        RD = SBMemory.at(SrcV.MemorySlotsAssigned.front());
       }
       ReleaseMemoryFromStream(); // to remove the null char
       break;
@@ -892,5 +909,5 @@ void inpCommand() {
   // the stream. A standalone command.
   std::string PseudoStore;
   std::getline(std::cin, PseudoStore);
-  InsertWholeDataInSB(PseudoStore, TokenTypes::CharVal);
+  InsertWholeDataInSB(PseudoStore, TokenTypes::StringVal);
 }
