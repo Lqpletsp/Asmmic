@@ -33,7 +33,7 @@ std::unordered_map<std::string, TokenTypes> MapStringAndCommand = {
     {"div", TokenTypes::div},       {"mlt", TokenTypes::mlt},
     {"toi", TokenTypes::toi},       {"tod", TokenTypes::tod},
     {"tos", TokenTypes::tos},       {"$", TokenTypes::Of},
-    {"inp", TokenTypes::inp}};
+    {"inp", TokenTypes::inp},       {"sze", TokenTypes::sze}};
 
 bool CheckIfCommand(const TokenTypes &EnumTokenVal) {
   switch (EnumTokenVal) {
@@ -70,6 +70,7 @@ bool CheckIfMidLineCommand(const TokenTypes &EnumTokenVal) {
   case TokenTypes::tod:
   case TokenTypes::tos:
   case TokenTypes::toi:
+  case TokenTypes::sze:
     return true;
   default:
     return false;
@@ -847,7 +848,8 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
         continue;
       } else if (TypeOfToken == TokenTypes::toi ||
                  TypeOfToken == TokenTypes::tod ||
-                 TypeOfToken == TokenTypes::tos) {
+                 TypeOfToken == TokenTypes::tos ||
+                 TypeOfToken == TokenTypes::sze) {
         OneArgMLC = true;
 
       } else if (TypeOfToken == TokenTypes::inp) {

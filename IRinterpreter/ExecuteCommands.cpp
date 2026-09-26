@@ -9,7 +9,6 @@ bool OperateBoolExpr();
 void AddNullChar();
 std::pair<std::string, TokenTypes> GetDataFromToken();
 bool CheckIfAppBCP() { return (BCP + 1 >= ByteCode.size()) ? false : true; }
-
 int AllocateSBmemory() {
   int MemoryAdr = SMalloc();
   if (MemoryAdr < 0)
@@ -103,7 +102,9 @@ void InsertDataInSB(const T &DataToStore, const TokenTypes &DataType) {
   SBMemory.at(MemoryAddressToStore).VariableID = 0;
   streamVar.MemorySlotsAssigned.push_back(MemoryAddressToStore);
 }
-void InsertWholeDataInSB(const std::string &Data, const TokenTypes &DT) {
+void InsertWholeDataInSB(std::string &Data, const TokenTypes &DT) {
+  if (Data == "")
+    Data = " ";
   switch (DT) {
   case (TokenTypes::StringVal):
     for (const char ch : Data) {
@@ -180,8 +181,9 @@ std::pair<int, int> ResolveArrays() {
   if (AddrStack.size() < 1 && VarStack.size() > 1) {
     ShowError(BCR,
               ErrorTypes::NoArrayIndexGiven); // invalid error message
-  } else if (AddrStack.size() == 0 && VarStack.size() == 1)
+  } else if (AddrStack.size() == 0 && VarStack.size() == 1) {
     return {VarStack.top(), -1};
+  }
   while (VarStack.size() > 1 && AddrStack.size() == 1) {
     VariableID = VarStack.top();
     int Address = AddrStack.top();
@@ -408,7 +410,8 @@ std::pair<std::string, TokenTypes> GetDataFromToken() {
       // identifier or boolval
     case TokenTypes::StringVal:
     case TokenTypes::CharVal:
-    case TokenTypes::BoolVal:
+    case TokenTypes::TrueVal:
+    case TokenTypes::FalseVal:
     case TokenTypes::Identifier:
       if (type == TokenTypes::DoubleVal || type == TokenTypes::IntVal)
         ShowError(ByteCode.at(FallBackBCP), ErrorTypes::InvalidTypeConversion);
@@ -427,6 +430,32 @@ std::pair<std::string, TokenTypes> GetDataFromToken() {
       break;
     }
     break;
+  }
+  case (TokenTypes::sze): {
+    int FallBackBCP = BCP;
+    ++BCP;
+    auto dat = GetDataFromToken();
+    std::string val = dat.first;
+    switch (dat.second) {
+    case TokenTypes::IntVal:
+    case TokenTypes::BoolVal:
+    case TokenTypes::DoubleVal:
+    case TokenTypes::TrueVal:
+    case TokenTypes::CharVal:
+    case TokenTypes::FalseVal:
+      Data = "1";
+      break;
+    case TokenTypes::StringVal:
+      Data = std::to_string(val.size());
+      break;
+    default:
+      std::cout << "FAILED:sze;TTYPE:" << static_cast<int>(dat.second)
+                << std::endl;
+
+      break;
+    }
+    type = TokenTypes::IntVal;
+    break; 
   }
   case TokenTypes::VariableID: {
     VariableDT &srcVar = *GetVariableMetaData(std::stoi(BCR.LiteralToken));
@@ -450,10 +479,15 @@ std::pair<std::string, TokenTypes> GetDataFromToken() {
     std::deque<int> PD = GetArrayData();
     if (PD.size() > 1) {
       for (size_t i = 0; i < PD.size(); ++i) {
-        Data += SBMemory.at(PD.at(i)).Data;
+        std::string dat = SBMemory.at(PD.at(i)).Data; 
+        if (dat.empty()) Data += " "; 
+        else Data += SBMemory.at(PD.at(i)).Data;
       }
       type = TokenTypes::StringVal;
-    } else {
+    }else if (PD.empty()){
+      Data = ""; 
+      type = TokenTypes::StringVal; 
+    }else {
       std::string PrintData = SBMemory.at(PD.front()).Data;
       if (Arr.DataType == TokenTypes::BoolVal) {
         if (PrintData == "T")
@@ -477,6 +511,7 @@ std::pair<std::string, TokenTypes> GetDataFromToken() {
     ShowError(BCR, ErrorTypes::GarbageArgInACommand);
     break;
   }
+
   return {Data, type};
 }
 bool OperateBoolExpr() {

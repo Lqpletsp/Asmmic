@@ -68,6 +68,7 @@ enum class TokenTypes {
   tos, // to string
   toi, // to integer
   tod, // to double
+  sze, // size
   // commands
   out,
   add,
