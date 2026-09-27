@@ -48,6 +48,7 @@ enum class ErrorTypes {
   NoOfOperator,
   InvalidTypeConversion,
   InvalidCommandFormat,
+  MemoryReductionArgLessThanTheSizeAllocated,
 };
 
 inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
@@ -138,6 +139,8 @@ inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {
     {ErrorTypes::InvalidTypeConversion,
      "Cannot convert from string/char/boolean to int/double"},
     {ErrorTypes::InvalidCommandFormat,
-     "The line command does not support the intended arguments"}};
+     "The line command does not support the intended arguments"}, 
+     {ErrorTypes::MemoryReductionArgLessThanTheSizeAllocated, 
+    "Argument for memory reduction was less than the size allocated to the identifier"}};
 void ShowError(const TokenDT &Token, const ErrorTypes &Type);
 void ShowError(const ByteCodeDT &Token, const ErrorTypes &Type);

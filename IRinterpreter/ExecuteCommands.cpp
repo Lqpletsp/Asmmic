@@ -228,6 +228,14 @@ void IncreaseMemorySpaces(const int &VariableID, const int &MemorySpaces) {
     SBMemory.at(MemorySpaceALlocated).DataType = Variable.DataType;
   }
 }
+void DecreaseMemorySpace(const int &VariableID, const int &MemorySpaces){
+  VariableDT &Variable = *GetVariableMetaData(VariableID); 
+  for (int _ = 0; _ < MemorySpaces; ++_){
+    int MemoryToRelease = Variable.MemorySlotsAssigned.back(); 
+    Variable.MemorySlotsAssigned.pop_back(); 
+    g_TotalMemPool.push(MemoryToRelease); 
+  }
+}
 void ResolveWriteMode() {
   ByteCodeDT BCR = ByteCode.at(BCP);
   while (BCR.TypeRepr != TokenTypes::NewLine &&
@@ -921,10 +929,12 @@ void mlcCommand() {
       if (DT != TokenTypes::IntVal)
         ShowError(BCR, ErrorTypes::InvalidTypeForNumberOfAllocations);
       int Allocated = std::stoi(MemorySpaceAllocated);
-      if (Allocated < 0)
-        ShowError(BCR, ErrorTypes::ZeroOrNegativeMemoryAllocation);
-
-      IncreaseMemorySpaces(VariableID, Allocated);
+      if (Allocated < 0){
+        if (DestV.MemorySlotsAssigned.size() < Allocated*-1)
+          ShowError(BCR, ErrorTypes::MemoryReductionArgLessThanTheSizeAllocated); 
+        DecreaseMemorySpace(VariableID,Allocated*-1); 
+      }else
+        IncreaseMemorySpaces(VariableID, Allocated);
       break;
     }
     default:
