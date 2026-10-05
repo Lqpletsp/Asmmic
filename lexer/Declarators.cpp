@@ -26,6 +26,7 @@ void DeclareMemory(const TokenizedLineDT &MemDecLine) {
   try {
     TotalMemSize = std::stoi(MemDecLine.at(2).LiteralToken);
   } catch (...) {
+    // to handle overflow
     ShowError(MemDecLine.at(2), ErrorTypes::GarbageArgInACommand);
   }
   if (TotalMemSize <= 0)

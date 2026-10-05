@@ -49,6 +49,7 @@ enum class ErrorTypes {
   InvalidTypeConversion,
   InvalidCommandFormat,
   MemoryReductionArgLessThanTheSizeAllocated,
+  OutofrangevalueFortypes
 };
 
 inline std::unordered_map<ErrorTypes, std::string> CorrespondingErrorStrings = {

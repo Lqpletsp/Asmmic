@@ -106,12 +106,44 @@ void InsertWholeDataInSB(std::string &Data, const TokenTypes &DT) {
   if (Data == "")
     Data = " ";
   switch (DT) {
-  case (TokenTypes::StringVal):
+  case (TokenTypes::StringVal): {
+    std::string Save = ""; 
     for (const char ch : Data) {
-      InsertDataInSB(ch, TokenTypes::CharVal);
-    }
+      if (!Save.empty()) {
+        // Evaluate the escape tag character after a backslash
+        std::string processed = "";
+        switch (ch) {
+          case 'n':  processed = "\n"; break; 
+          case 't':  processed = "\t"; break; 
+          case 'r':  processed = "\r"; break; 
+          case 'v':  processed = "\v"; break; 
+          case 'b':  processed = "\b"; break; 
+          case 'f':  processed = "\f"; break; 
+          case 'a':  processed = "\a"; break; 
+          case '\\': processed = "\\"; break; 
+          case '"':  processed = "\""; break; 
+          case '\'': processed = "'";  break; 
+          case '0':  processed = std::string(1, '\0'); break; // Null char
+          default:   
+            // Unrecognized tag -> Keep both the backslash and the character
+            processed = Save + ch; 
+            break;
+        }
 
+        InsertDataInSB(processed, TokenTypes::CharVal); 
+        Save = "";
+      } else if (ch == '\\') {
+        Save = "\\"; 
+      } else {
+        std::string current(1, ch);
+        InsertDataInSB(current, TokenTypes::CharVal);
+      }
+    }
+    if (!Save.empty()) {
+      InsertDataInSB(Save, TokenTypes::CharVal);
+    }
     break;
+  }
   case (TokenTypes::IntVal):
   case (TokenTypes::TrueVal):
   case (TokenTypes::CharVal):
