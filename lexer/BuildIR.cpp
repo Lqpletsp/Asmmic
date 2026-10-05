@@ -108,7 +108,8 @@ TokenTypes DetermineType(const std::string &Token) {
       return TokenTypes::Flag;
     else if ((Token.front() == '"' && Token.back() == '"') ||
              (Token.front() == '\'' && Token.back() == '\'')) {
-      if (Token.size() == 3)
+      if (Token.size() == 3 || (Token.size() == 4 && Token.at(1) == '\\'))
+        // to handle question tags
         return TokenTypes::CharVal; // char
       return TokenTypes::StringVal; // string
     } else if (ValidateName(Token))

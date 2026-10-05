@@ -2,6 +2,7 @@
 #include "../main/ImportantInternalFunctions.h"
 #include <iostream>
 #include <string>
+#include <unordered_map>
 
 namespace {
 double OperateMathExpr();
@@ -146,12 +147,35 @@ void InsertWholeDataInSB(std::string &Data, const TokenTypes &DT) {
   }
   case (TokenTypes::IntVal):
   case (TokenTypes::TrueVal):
-  case (TokenTypes::CharVal):
   case (TokenTypes::FalseVal):
   case (TokenTypes::DoubleVal):
   case (TokenTypes::BoolVal):
     InsertDataInSB(Data, DT);
     break;
+  case (TokenTypes::CharVal): {
+    std::unordered_map<char,std::string> TagMap = {
+    {'n',  "\n"},
+    {'t',  "\t"},
+    {'r',  "\r"},
+    {'v',  "\v"},
+    {'b',  "\b"},
+    {'f',  "\f"},
+    {'a',  "\a"},
+    {'\\', "\\"},
+    {'"',  "\""},
+    {'\'', "'"},
+    {'0',  std::string(1, '\0')}
+    }; 
+    std::string dat; 
+    if (Data.size() == 1) dat = Data; 
+    else if (Data.size() == 2){
+      auto it = TagMap.find(Data.at(1)); 
+      if (it == TagMap.end()) dat = TagMap.at(1);  
+      else dat = it->second;  
+    } 
+    InsertDataInSB(dat,TokenTypes::CharVal);
+    break;
+  } 
   default:
     std::cout << "FAILED:InsertWholeDataInSB;TTYPE:" << static_cast<int>(DT)
               << std::endl;
