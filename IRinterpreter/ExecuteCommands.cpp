@@ -150,6 +150,7 @@ void InsertWholeDataInSB(std::string &Data, const TokenTypes &DT) {
   case (TokenTypes::FalseVal):
   case (TokenTypes::DoubleVal):
   case (TokenTypes::BoolVal):
+    std::cout << "IDSB: " << Data << " | " << static_cast<int>(DT) << std::endl; 
     InsertDataInSB(Data, DT);
     break;
   case (TokenTypes::CharVal): {
@@ -339,9 +340,12 @@ void ResolveWriteMode() {
         DestV.MemorySlotsAssigned.push_back(DestAddr);
       } else
         DestAddr = DestV.MemorySlotsAssigned.at(0);
-
+      std::cout << "BV" << std::endl; 
+      std::cout << "SA: " << static_cast<int>(SBMemory.at(SrcAddr).DataType) << std::endl; 
+      std::cout << "DV: " << static_cast<int>(SBMemory.at(DestV.MemorySlotsAssigned.front()).DataType) << std::endl; 
+      std::cout << "DVT: " << static_cast<int>(DestV.DataType) << std::endl;
       ValidateType(SrcAddr, DestV.MemorySlotsAssigned.front());
-
+      std::cout << "AV" << std::endl;
       std::string Data;
 
       while (SBMemory.at(SrcAddr).DataType != TokenTypes::Unknown) {
@@ -575,7 +579,7 @@ std::pair<std::string, TokenTypes> GetDataFromToken() {
     ShowError(BCR, ErrorTypes::GarbageArgInACommand);
     break;
   }
-
+  std::cout << "GDFT: " << Data << " Type: " << static_cast<int>(type) << std::endl; 
   return {Data, type};
 }
 bool OperateBoolExpr() {
@@ -852,9 +856,10 @@ bool ResolveReadMode(TokenTypes cmd) {
   bool NoOtherThanInt = cmd == TokenTypes::mlc;
   while ((BCR.TypeRepr != TokenTypes::NewLine &&
           BCR.TypeRepr != TokenTypes::ENDCODE) &&
-         CurrentState == Read) { // no issue on the first iteration
+         CurrentState == Read) {
 
     auto [Dat, DTP] = GetDataFromToken();
+    std::cout << "RRM: " << static_cast<int>(DTP) << std::endl;
     if (DTP == TokenTypes::Colon) {
       CurrentState = Write;
       break;

@@ -172,12 +172,12 @@ void decCommand(const TokenizedLineDT &DecLine) {
   };
   std::string MLC = DecLine.at(0).LiteralToken;
   TokenizedLineDT LineArguments = SliceStuff(1, DecLine.size() - 1, DecLine);
-  if (MLC == ".mem")
+  if (MLC == "mem")
     DeclareMemory(LineArguments);
-  else if (MLC == ".var") {
+  else if (MLC == "var") {
     CheckMemory();
     DeclareVariable(LineArguments);
-  } else if (MLC == ".mod") {
+  } else if (MLC == "mod") {
     CheckMemory();
     DeclareModules(LineArguments);
   } else

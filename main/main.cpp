@@ -18,20 +18,13 @@ int main() {
   if (ExtractTextFromFile() > 0)
     return 1;
   HandleLexer();
+  DebugFunction(); 
   ErrorInstance = "IT";
   std::cout << "________________________\n" << std::endl;
-
-  // --- Start Timer ---
   auto start = std::chrono::high_resolution_clock::now();
-
   InterpretByteCode();
-
-  // --- End Timer ---
   auto end = std::chrono::high_resolution_clock::now();
-
   std::cout << "\n________________________\n" << std::endl;
-
-  // Calculate duration in milliseconds
   std::chrono::duration<double, std::milli> duration = end - start;
   std::cout << "InterpretByteCode execution time: " << duration.count()
             << " ms\n";

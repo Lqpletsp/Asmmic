@@ -3,6 +3,7 @@
 #include "Declarators.h"
 #include <iostream>
 #include <string>
+#include <unordered_map>
 namespace {
 
 bool IsMathOperator(TokenTypes &type) {
@@ -11,29 +12,50 @@ bool IsMathOperator(TokenTypes &type) {
 }
 
 std::unordered_map<std::string, TokenTypes> MapStringAndCommand = {
-    {"clc", TokenTypes::clc},       {"evl", TokenTypes::evl},
-    {"set", TokenTypes::set},       {"dec", TokenTypes::dec},
-    {"ini", TokenTypes::ini},       {"mlc", TokenTypes::mlc},
-    {"and", TokenTypes::And},       {"not", TokenTypes::Not},
-    {"out", TokenTypes::out},       {"rpt", TokenTypes::rpt},
-    {"cmp", TokenTypes::cmp},       {"end", TokenTypes::end},
-    {"<=", TokenTypes::LessEqual},  {">=", TokenTypes::GreaterEqual},
-    {"<", TokenTypes::LessThan},    {">", TokenTypes::GreaterThan},
-    {"orr", TokenTypes::Or},        {"@", TokenTypes::MemoryAddressIndicator},
-    {"!=", TokenTypes::NotEqual},   {"(", TokenTypes::Parenthesis},
-    {")", TokenTypes::Parenthesis}, {"+", TokenTypes::Add},
-    {"-", TokenTypes::Min},         {"*", TokenTypes::Mlt},
-    {"/", TokenTypes::Div},         {":", TokenTypes::Colon},
-    {"]", TokenTypes::Stopper},     {"T", TokenTypes::TrueVal},
-    {"F", TokenTypes::FalseVal},    {"==", TokenTypes::Equal},
-    {"=", TokenTypes::Equal},       {"elf", TokenTypes::elf},
-    {"ele", TokenTypes::ele},       {".", TokenTypes::Period},
-    {"gto", TokenTypes::gto},       {"inc", TokenTypes::inc},
-    {"add", TokenTypes::add},       {"min", TokenTypes::min},
-    {"div", TokenTypes::div},       {"mlt", TokenTypes::mlt},
-    {"toi", TokenTypes::toi},       {"tod", TokenTypes::tod},
-    {"tos", TokenTypes::tos},       {"$", TokenTypes::Of},
-    {"inp", TokenTypes::inp},       {"sze", TokenTypes::sze}};
+    {"set", TokenTypes::set}, {"dec", TokenTypes::dec},
+    {"ini", TokenTypes::ini}, {"mlc", TokenTypes::mlc},
+    {"out", TokenTypes::out}, {"rpt", TokenTypes::rpt},
+    {"cmp", TokenTypes::cmp}, {"end", TokenTypes::end},
+    {"elf", TokenTypes::elf}, {"ele", TokenTypes::ele},
+    {"gto", TokenTypes::gto}, {"inc", TokenTypes::inc},
+    {"add", TokenTypes::add}, {"min", TokenTypes::min},
+    {"div", TokenTypes::div}, {"mlt", TokenTypes::mlt},
+    {"inp", TokenTypes::inp},
+};
+std::unordered_map<std::string, TokenTypes> MapStringAndMLC = {
+    {"clc", TokenTypes::clc},
+    {"evl", TokenTypes::evl},
+    {"tod", TokenTypes::tod},
+    {"tos", TokenTypes::tos},
+    {"toi", TokenTypes::toi},
+    {"sze", TokenTypes::sze},
+    {"and", TokenTypes::And},
+    {"orr", TokenTypes::Or},
+    {"not", TokenTypes::Not},
+}; 
+std::unordered_map<std::string,TokenTypes> MapStringAndKeyword = {
+    {"@", TokenTypes::MemoryAddressIndicator},
+    {"]", TokenTypes::Stopper},
+    {"=", TokenTypes::Equal},
+    {"==", TokenTypes::Equal},
+    {"T", TokenTypes::TrueVal},
+    {"F", TokenTypes::FalseVal},
+    {"/", TokenTypes::Div},
+    {"-", TokenTypes::Min},
+    {"+", TokenTypes::Add},
+    {"-", TokenTypes::Min},
+    {"*", TokenTypes::Mlt},
+    {")", TokenTypes::Parenthesis},
+    {"(", TokenTypes::Parenthesis},
+    {"!=", TokenTypes::NotEqual},
+    {":", TokenTypes::Colon},
+    {">=", TokenTypes::GreaterEqual},
+    {"<=", TokenTypes::LessEqual},
+    {"<", TokenTypes::LessThan},
+    {">", TokenTypes::GreaterThan},
+    {"$", TokenTypes::Of},
+    {".", TokenTypes::Period},
+};
 
 bool CheckIfCommand(const TokenTypes &EnumTokenVal) {
   switch (EnumTokenVal) {
@@ -93,16 +115,11 @@ TokenTypes DetermineType(const std::string &Token) {
   }
 
   std::string SingleToken = Token;
-  if (Token.front() == '.') {
-    SingleToken = SliceStuff(1, Token.size() - 1, Token);
-    auto it = MapStringAndCommand.find(SingleToken);
-    if (it != MapStringAndCommand.end() && CheckIfMidLineCommand(it->second)) {
-      return it->second;
-    }
-    return TokenTypes::Unknown;
-  }
-
-  auto it = MapStringAndCommand.find(SingleToken);
+  auto it = MapStringAndMLC.find(SingleToken); 
+  if (it != MapStringAndCommand.end())return it->second;  
+  it = MapStringAndKeyword.find(SingleToken); 
+  if (it != MapStringAndKeyword.end()) return it->second; 
+  it = MapStringAndCommand.find(SingleToken);
   if (it == MapStringAndCommand.end()) {
     if (Token.front() == '~')
       return TokenTypes::Flag;
@@ -698,6 +715,8 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
   bool OneArgMLC = false;
 
   for (const auto &Line : TokenizedCode) {
+    auto it = g_VariableTable.find(1); 
+    if (it != g_VariableTable.end()) std::cout << static_cast<int>(it->second.DataType) << std::endl; 
     if (Line.empty())
       continue;
     else if (!CheckIfCommand(DetermineType(Line.at(0).LiteralToken))) {
@@ -861,7 +880,7 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
         if (LinePointer >= Line.size())
           ShowError(Token, ErrorTypes::InvalidEndStatement);
         Token = Line.at(LinePointer);
-        if (Token.LiteralToken == ".cmp") {
+        if (Token.LiteralToken == "cmp") {
           if (CMPStartLine.size() > 1)
             ShowError(Token, ErrorTypes::PastCMPstatementsStartedbutNotEnded);
           ByteCode.at(CMPStartLine.top()).LiteralToken =
@@ -882,11 +901,11 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
             CMPStartLine = std::stack<int>();
 
           break;
-        } else if (Token.LiteralToken == ".all") {
+        } else if (Token.LiteralToken == "all") {
           ByteCode.push_back(
               CreateByteCodeToken("", -1, -1, TokenTypes::ENDCODE));
           break;
-        } else if (Token.LiteralToken == ".rpt") {
+        } else if (Token.LiteralToken == "rpt") {
           // assuming the most recent rpt line ended
           if (RPTStartLine.empty())
             ShowError(Token, ErrorTypes::endrptStatementGivenButNotStarted);
@@ -901,7 +920,7 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
           // statement for loop
           RPTStartLine.pop();
           break;
-        } else if (Token.LiteralToken == ".mod") {
+        } else if (Token.LiteralToken == "mod") {
           if (TrackModuleDecLine.empty())
             ShowError(Token, ErrorTypes::ModuleTriedEndingButWasNotStarted);
           LocalModuleVariableTable[CurrentModuleID - 1] = *c_VariableTable;
