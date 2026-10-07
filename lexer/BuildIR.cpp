@@ -1,7 +1,6 @@
 #include "../errorhandling/ErrorHandler.h"
 #include "../main/ImportantInternalFunctions.h"
 #include "Declarators.h"
-#include <iostream>
 #include <string>
 #include <unordered_map>
 namespace {
@@ -155,10 +154,11 @@ std::string GetStrModuleID(const std::string &ModuleName) {
 }
 std::string GetStrVariableID(const std::string &VariableName) {
   int VariableID = GetAssignedVariableID(VariableName);
-  if (VariableID < 0 && !CheckIfValidGlobalVariable(VariableID))
-    return "!"; // means the variable does not exist
+  if (VariableID < 0 && !CheckIfValidGlobalVariable(VariableID)) return "!"; // means the variable does not exist
   std::stringstream ss;
-  ss << std::fixed << (*c_MapVariableNameAndID)[VariableName];
+  auto it = (*c_MapVariableNameAndID).find(VariableName); 
+  if (it == (*c_MapVariableNameAndID).end()) ss << std::fixed << g_MapVariableNameAndID[VariableName]; 
+  else ss << std::fixed << (*c_MapVariableNameAndID)[VariableName];
   return ss.str();
 }
 std::string FormatStringsAndChars(const std::string &LV) {
