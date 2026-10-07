@@ -704,7 +704,6 @@ void HandleModuleCalls(const TokenizedLineDT &Line) {
   }
 }
 } // namespace
-
 void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
   ByteCodeDT ByteCodeReprOfTokens;
   std::stack<int> RPTStartLine;
@@ -715,8 +714,6 @@ void GenerateByteCode(const TokenizedCodeDT &TokenizedCode) {
   bool OneArgMLC = false;
 
   for (const auto &Line : TokenizedCode) {
-    auto it = g_VariableTable.find(1); 
-    if (it != g_VariableTable.end()) std::cout << static_cast<int>(it->second.DataType) << std::endl; 
     if (Line.empty())
       continue;
     else if (!CheckIfCommand(DetermineType(Line.at(0).LiteralToken))) {

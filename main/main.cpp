@@ -18,8 +18,6 @@ int main() {
   if (ExtractTextFromFile() > 0)
     return 1;
   HandleLexer();
-  DebugFunction(); 
-  ErrorInstance = "IT";
   std::cout << "________________________\n" << std::endl;
   auto start = std::chrono::high_resolution_clock::now();
   InterpretByteCode();

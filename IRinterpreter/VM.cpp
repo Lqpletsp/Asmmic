@@ -1,6 +1,5 @@
 #include "../errorhandling/ErrorHandler.h"
 #include "ExecuteCommands.h"
-#include <iostream>
 void InterpretByteCode() {
   BCP = 0;
   TokenTypes EnumRepr;
@@ -8,7 +7,6 @@ void InterpretByteCode() {
     return;
   ByteCodeDT BCR = ByteCode.at(0);
   while (BCR.TypeRepr != TokenTypes::ENDCODE && BCP < ByteCode.size()) {
-    std::cout << static_cast<int>(g_VariableTable.find(1)->second.DataType) << std::endl;
     EnumRepr = BCR.TypeRepr;
     switch (EnumRepr) {
     case TokenTypes::out:

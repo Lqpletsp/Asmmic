@@ -78,9 +78,8 @@ void DeclareModules(const TokenizedLineDT &ModDecLine) {
   });
 
   AddNewLine();
-
-  if (ModDecLine.size() < 2)
-    return;
+  bool ZeroParameters = false; 
+  if (ModDecLine.size() < 2) ZeroParameters = true; 
   else if (ModDecLine.at(1).LiteralToken != ":")
     ShowError(ModDecLine.at(2), ErrorTypes::NoParameterIndication);
   VariableDT parameter{
@@ -91,23 +90,25 @@ void DeclareModules(const TokenizedLineDT &ModDecLine) {
   global = false;
   c_VariableTable = &l_VariableTable;
   c_MapVariableNameAndID = &l_MapVariableNameAndID;
-  ByteCode.push_back({.LiteralToken = "set",
-                      .LineNum = -1,
-                      .ColNum = -1,
-                      .TypeRepr = TokenTypes::set});
-  ByteCode.push_back({.LiteralToken = ":",
-                      .LineNum = -1,
-                      .ColNum = -1,
-                      .TypeRepr = TokenTypes::Colon});
-  for (size_t i = 2; i < ModDecLine.size(); ++i) {
-    TokenDT token = ModDecLine.at(i);
-    AppendVariableDetails(token.LiteralToken, false, TokenTypes::Unknown);
-    int VarID = (*c_MapVariableNameAndID)[token.LiteralToken];
-    int LiN = token.LineNum, CoN = token.ColNum;
-    ByteCode.push_back({.LiteralToken = std::to_string(VarID),
-                        .LineNum = LiN,
-                        .ColNum = CoN,
-                        .TypeRepr = TokenTypes::VariableID});
+  if (!ZeroParameters){
+    ByteCode.push_back({.LiteralToken = "set",
+                        .LineNum = -1,
+                        .ColNum = -1,
+                        .TypeRepr = TokenTypes::set});
+    ByteCode.push_back({.LiteralToken = ":",
+                        .LineNum = -1,
+                        .ColNum = -1,
+                        .TypeRepr = TokenTypes::Colon});
+    for (size_t i = 2; i < ModDecLine.size(); ++i) {
+      TokenDT token = ModDecLine.at(i);
+      AppendVariableDetails(token.LiteralToken, false, TokenTypes::Unknown);
+      int VarID = (*c_MapVariableNameAndID)[token.LiteralToken];
+      int LiN = token.LineNum, CoN = token.ColNum;
+      ByteCode.push_back({.LiteralToken = std::to_string(VarID),
+                          .LineNum = LiN,
+                          .ColNum = CoN,
+                          .TypeRepr = TokenTypes::VariableID});
+    }
   }
   AddNewLine();
   ModuleTable[ModID] = ModuleInfo;

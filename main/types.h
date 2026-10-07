@@ -4,7 +4,7 @@
 #include <stack>
 #include <unordered_map>
 #include <vector>
-
+#include <iostream>
 struct TokenDT {
   std::string LiteralToken;
   int LineNum;
@@ -106,7 +106,7 @@ struct VariableDT {
   bool Array;
 };
 namespace fs = std::filesystem;
-const inline fs::path dir_path = "";
+const inline fs::path dir_path = "/home/solitude/CodeTests.dsm";
 inline std::string MAINCODE = R"()";
 
 inline std::vector<ByteCodeDT> ByteCode;
